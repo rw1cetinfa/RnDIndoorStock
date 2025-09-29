@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <solid android:color="#F0F7F4" /> <!-- Yarı saydam siyah arka plan -->
+
+    <corners android:radius="24dp" /> <!-- Yuvarlatılmış köşeler -->
+
+    <padding
+        android:left="16dp"
+        android:top="16dp"
+        android:right="16dp"
+        android:bottom="16dp" />
+</shape>

@@ -1,0 +1,5 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#C70039" /> <!-- Hafif yeşil -->
+    <corners android:radius="16dp" />
+</shape>

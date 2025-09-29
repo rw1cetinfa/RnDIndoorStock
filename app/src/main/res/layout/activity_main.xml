@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Success Overlay -->
+    <LinearLayout
+        android:id="@+id/layoutMain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F0F7F4"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="0dp"
+            android:text="LOT OKUTUNUZ"
+            android:textColor="#2E3A59"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <!-- Ana resim + sağ üst köşe ikonu -->
+        <FrameLayout
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="0dp">
+
+            <ImageView
+                android:id="@+id/imgTire"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/rfid_tyre_logo" />
+
+            <ImageView
+                android:id="@+id/imgTireSmall"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="top|end"
+                android:src="@drawable/reader" />
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/txtLot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="6dp"
+            android:text="LOT NUMARASI"
+            android:textColor="#2E3A59"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/editTextLotNumber"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/text_bg"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:paddingStart="8dp"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/txtRed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="6dp"
+            android:text="OKUNAN"
+            android:textColor="#2E3A59"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtRFIDData"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/text_bg"
+            android:gravity="center"
+            android:text="3015EBE26461A7C2540BE3FF"
+            android:textColor="#2E3A59"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/txtToBeWritten"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="6dp"
+            android:text="YAZILACAK"
+            android:textColor="#2E3A59"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtRFIDToBeWritten"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/text_bg"
+            android:gravity="center"
+            android:text="3015EBE26461A7C2540BE3FF"
+            android:textColor="#2E3A59"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/btnWrite"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:backgroundTint="#7FC8A9"
+            android:text="YAZ"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/successOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#88000000"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtSuccess"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="YAZMA BAŞARILI"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/success_background"
+            android:padding="16dp"
+            android:layout_gravity="center" />
+
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/failOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#88000000"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtFail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="YAZMA BAŞARISIZ"
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/fail_background"
+            android:padding="16dp"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <!-- Konfeti Animasyonu -->
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/confettiView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:lottie_rawRes="@raw/fireworks_animation"
+        app:lottie_autoPlay="false"
+        app:lottie_loop="false"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        tools:ignore="MissingClass" />
+
+    <Button
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GERİ"
+        android:backgroundTint="#7FC8A9"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:layout_gravity="top|start"
+        android:layout_marginTop="36dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginStart="12dp" />
+
+</FrameLayout>

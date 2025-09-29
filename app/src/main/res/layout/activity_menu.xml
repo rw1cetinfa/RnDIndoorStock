@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E3E7EC"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtLabName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/bungee"
+            android:text="OPERASYONLAR"
+            android:textColor="#20262B"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+            android:id="@+id/btnStockTaking"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="96dp"
+            android:layout_marginEnd="96dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_bg"
+            android:text="ENVANTER SAYIM"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+
+            android:id="@+id/btnMaterialDetail"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="96dp"
+            android:layout_marginEnd="96dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_bg"
+            android:text="MALZEME DETAYI"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+            android:id="@+id/btnRfidWrite"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="96dp"
+            android:layout_marginEnd="96dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_bg"
+            android:text="RFID YAZ"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="96dp"
+            android:layout_marginEnd="96dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_bg"
+            android:text="ÇIKIŞ"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+
+    </LinearLayout>
+</FrameLayout>

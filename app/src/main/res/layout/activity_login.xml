@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E3E7EC"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txtLabName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/bungee"
+            android:text="KIMYA LABORATUVARI ENVANTER SAYIM"
+            android:textColor="#20262B"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+
+
+        <FrameLayout
+            android:layout_width="320dp"
+            android:layout_height="180dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="0dp">
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/chemistryView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:focusable="false"
+                android:visibility="visible"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/potion_blue" />
+
+
+        </FrameLayout>
+
+
+
+        <EditText
+            android:id="@+id/editTextWorkerCode"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/text_bg"
+            android:ems="10"
+            android:hint="Sicil Giriniz..."
+            android:textColorHint="@android:color/white"
+            android:fontFamily="@font/sans"
+            android:inputType="textPersonName"
+            android:paddingStart="8dp"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+            android:id="@+id/btnLogin"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="100dp"
+            android:layout_marginEnd="100dp"
+            android:background="@drawable/button_bg"
+            android:text="GİRİŞ"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+
+
+
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/failOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#88000000"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/txtFail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="24sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/fail_background"
+            android:padding="16dp"
+            android:textAlignment="center"
+            android:layout_gravity="center" />
+    </FrameLayout>
+</FrameLayout>

@@ -1,0 +1,45 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#80000000"> <!-- yarı saydam arka plan -->
+
+    <!-- Lottie Animasyon -->
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/lottieAnimation"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/scanner_animation"
+        />
+
+
+
+    <!-- Yuvarlak ve Ortasındaki Sayı -->
+    <FrameLayout
+        android:id="@+id/circleContainer"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_centerInParent="true">
+
+        <!-- Yuvarlak -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/circle_border"/>
+
+        <!-- Sayı -->
+        <TextView
+            android:id="@+id/txtScannerAnimationNumber"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="0"
+            android:fontFamily="@font/sans"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"/>
+    </FrameLayout>
+</RelativeLayout>
