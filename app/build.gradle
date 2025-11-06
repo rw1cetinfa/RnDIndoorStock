@@ -11,9 +11,20 @@ android {
         minSdk 30
         targetSdk 34
         versionCode 1
-        versionName "1.0"
+        versionName "1.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def appName = "LaboratoryStock" // burada istediğin ismi yaz
+            def versionName = variant.versionName
+            def buildTypeName = variant.buildType.name
+
+            // örnek: MyApp_v1.2.3_release_20251031.apk
+            outputFileName = "${appName}.apk"
+        }
     }
 
     buildTypes {

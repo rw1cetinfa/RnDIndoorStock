@@ -2,6 +2,7 @@ package com.example.rndlaboratorystock;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.rndlaboratorystock.Classes.APICallAynscTask;
@@ -319,7 +321,12 @@ public class MaterialDetailActivity extends AppCompatActivity {
         }
 
     }
-
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        Toast.makeText(this, "Lütfen ekrandaki geri butonunu kullanınız...", Toast.LENGTH_SHORT).show();
+        // super.onBackPressed(); // Çağırma
+    }
     public void ConnectRFIDReader(){
         new AsyncTask() {
             @Override
@@ -336,13 +343,14 @@ public class MaterialDetailActivity extends AppCompatActivity {
                                 }
                                 readerDevice = availableRFIDReaderList.get(0);
                                 reader = readerDevice.getRFIDReader();
-                                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
+
                                 System.out.println("Reader is connected:"+reader.isConnected());
                                 if (!reader.isConnected()) {
                                     // Establish connection to the RFID Reader
                                     System.out.println("Reader connecting");
                                     reader.connect();
                                     System.out.println("Reader connected");
+                                    reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     ConfigureReader();
                                     // tag event with tag data
                                     System.out.println("Reader configured");
@@ -350,7 +358,9 @@ public class MaterialDetailActivity extends AppCompatActivity {
                                     return true;
                                 }
                                 else{
+                                    reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     ConfigureReader();
+                                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                                 }
                             }
                         }
@@ -358,9 +368,11 @@ public class MaterialDetailActivity extends AppCompatActivity {
                 } catch (InvalidUsageException e) {
                     System.out.println(e.getVendorMessage());
                     e.printStackTrace();
+                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                 } catch (OperationFailureException e) {
                     System.out.println(e.getVendorMessage());
                     e.printStackTrace();
+                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                 }
                 return false;
             }

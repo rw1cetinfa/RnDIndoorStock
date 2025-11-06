@@ -2,11 +2,13 @@ package com.example.rndlaboratorystock;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 
@@ -63,6 +65,13 @@ public class MenuActivity extends AppCompatActivity {
                 GoToLogIn();
             }
         });
+    }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        Toast.makeText(this, "Lütfen ekrandaki çıkış butonunu kullanınız...", Toast.LENGTH_SHORT).show();
+        // super.onBackPressed(); // Çağırma
     }
 
     private void OpenStockTakingPage(){

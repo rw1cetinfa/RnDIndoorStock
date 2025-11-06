@@ -9,14 +9,17 @@ import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
 import com.example.rndlaboratorystock.Models.RndLaboratoryResponseSession;
 import com.example.rndlaboratorystock.Models.SessionPostModel;
+import com.example.rndlaboratorystock.Models.UpdateResponse;
 import com.example.rndlaboratorystock.Models.UserResponseModel;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Query;
+import retrofit2.http.Url;
 
 public interface APIInterface {
 
@@ -44,7 +47,7 @@ public interface APIInterface {
     Call<BlankModel> UpdateSession(@Body IncreaseShelfPostModel postModel);
 
     @GET("Laboratory/EndSession")
-    Call<BlankModel> EndSession(@Query("sessionId") int sessionId);
+    Call<BlankModel> EndSession(@Query("sessionId") int sessionId, @Query("flag") Boolean flag);
 
     @GET("Laboratory/CheckRFIDAvailability")
     Call<BlankModel> CheckRFIDAvailability(@Query("epc") String epc);
@@ -54,4 +57,12 @@ public interface APIInterface {
 
     @GET("Laboratory/GetMaterialDetailsByRFID")
     Call<RndLaboratoryMaterial> GetMaterialDetailsByRFID(@Query("epc") String epc);
+
+
+    //Automatic Update
+    @GET("AndroidApk/CheckUpdate")
+    Call<UpdateResponse> CheckUpdate();
+
+    @GET
+    Call<ResponseBody> DownloadApk(@Url String fileUrl); // Dinamik URL
 }

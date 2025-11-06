@@ -5,6 +5,7 @@ import androidx.core.content.res.ResourcesCompat;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -92,6 +93,7 @@ public class StockTakingActivity extends AppCompatActivity {
 
     TextView emptyView;
     TextView txtEpcCount;
+    TextView txtSelfNumber;
     TextView txtScannerAnimationNumber;
     TextView txtWorkerNameSurname;
     TextView txtFail;
@@ -115,6 +117,8 @@ public class StockTakingActivity extends AppCompatActivity {
     Button btnStart;
     Button btnNextShelf;
     Button btnEnd;
+    Button btnReset;
+    Button btnCancel;
 
     FrameLayout failOverlay;
     FrameLayout successOverlay;
@@ -198,6 +202,8 @@ public class StockTakingActivity extends AppCompatActivity {
         btnStart = findViewById(R.id.btnStart);
         btnNextShelf = findViewById(R.id.btnNextShelf);
         btnEnd = findViewById(R.id.btnEnd);
+        btnReset = findViewById(R.id.btnReset);
+        btnCancel = findViewById(R.id.btnCancel);
 
         txtWorkerNameSurname = findViewById(R.id.txtWorkerNameSurname);
         failOverlay = findViewById(R.id.failOverlay);
@@ -209,6 +215,7 @@ public class StockTakingActivity extends AppCompatActivity {
         txtSuccess = findViewById(R.id.txtSuccess);
         txtDate = findViewById(R.id.txtDate);
         txtWeek = findViewById(R.id.txtWeek);
+        txtSelfNumber = findViewById(R.id.txtSelfNumber);
 
 
         Spinner spinnerCabinet = findViewById(R.id.cupboardIdentifier);
@@ -315,6 +322,18 @@ public class StockTakingActivity extends AppCompatActivity {
                             .setPositiveButton("Evet", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     // Evet seçildiğinde yapılacaklar
+                                    if (reader != null && reader.isConnected()){
+                                        try {
+                                            reader.Actions.Inventory.stop();
+                                            reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, false);
+                                            reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.BARCODE_MODE, true);
+                                            reader.disconnect();
+                                        } catch (InvalidUsageException e) {
+                                            throw new RuntimeException(e);
+                                        } catch (OperationFailureException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                    }
                                     Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
                                     //intent.putExtra("supplier", supplier);
                                     intent.putExtra("wmCode", wmCode);
@@ -390,11 +409,15 @@ public class StockTakingActivity extends AppCompatActivity {
                                 }, 2000);
                                 sessionId = finalSessionCallResponse.Content.Data.get(0).Id;
                                 selfNumber = finalSessionCallResponse.Content.Data.get(0).LatestShelfNumber;
+                                selfNumber = selfNumber + 1;
+                                txtSelfNumber.setText(""+selfNumber);
                                 cabinetNumber = finalSessionCallResponse.Content.Data.get(0).LatestCabinetNumber;
                                 btnStart.setVisibility(View.INVISIBLE);
                                 runOnUiThread(() -> loadingDialog.dismiss());
                                 btnNextShelf.setVisibility(View.VISIBLE);
                                 btnEnd.setVisibility(View.VISIBLE);
+                                btnReset.setVisibility(View.VISIBLE);
+                                btnCancel.setVisibility(View.VISIBLE);
                             } else {
                                 ResponseModel<RndLaboratoryResponseSession> finalsessionCallResponse = finalSessionCallResponse;
                                 new Thread(new Runnable() {
@@ -463,172 +486,77 @@ public class StockTakingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                loadingDialog.show();
-                selfNumber += 1;
-                IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, selfNumber, spinnerCabinet.getSelectedItem().toString(), EPCs);
+                if(EPCs.size() > 0){
+                    loadingDialog.show();
+                    //selfNumber += 1;
+                    txtSelfNumber.setText(""+selfNumber);
+                    IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, selfNumber, spinnerCabinet.getSelectedItem().toString(), EPCs);
 
-
-                new Thread(() -> {
-                    try {
-                        Call<BlankModel> sessionCall = apiInterface.IncreaseSession(session);
-                        ResponseModel<BlankModel> sessionCallResponse = null;
-                        sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
-                        ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
-                        runOnUiThread(() -> {
-                            if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
-
-                                txtSuccess.setText(finalSessionCallResponse.Content.ResponseDesc+" Raf numarası:" + (selfNumber + 1));
-                                successOverlay.setVisibility(View.VISIBLE);
-                                new Handler().postDelayed(() -> {
-                                    successOverlay.setVisibility(View.GONE);
-                                }, 3000);
-
-                                clearTable();
-
-
-
-                                runOnUiThread(() -> loadingDialog.dismiss());
-                            }
-                            else if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 406){
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                // update UI
-                                                System.out.println(finalSessionCallResponse.ResponseCode);
-                                                txtFail.setText("Malzemeler daha önceden kaydedilmiş. Tekrar tarama yapınız.");
-                                                failOverlay.setVisibility(View.VISIBLE);
-                                                new Handler().postDelayed(() -> {
-                                                    failOverlay.setVisibility(View.GONE);
-                                                }, 3000);
-                                            }
-                                        });
-                                    }
-                                }).start();
-                                runOnUiThread(() -> loadingDialog.dismiss());
-                            }
-                            else {
-                                ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                // update UI
-                                                txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
-                                                failOverlay.setVisibility(View.VISIBLE);
-                                                new Handler().postDelayed(() -> {
-                                                    failOverlay.setVisibility(View.GONE);
-                                                }, 3000);
-                                            }
-                                        });
-                                    }
-                                }).start();
-                                runOnUiThread(() -> loadingDialog.dismiss());
-                            }
-                        });
-                    } catch (ExecutionException e) {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        // update UI
-                                        txtFail.setText(e.getLocalizedMessage());
-                                        failOverlay.setVisibility(View.VISIBLE);
-                                        new Handler().postDelayed(() -> {
-                                            failOverlay.setVisibility(View.GONE);
-                                        }, 3000);
-                                    }
-                                });
-                            }
-                        }).start();
-                        runOnUiThread(() -> loadingDialog.dismiss());
-                    } catch (InterruptedException e) {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        // update UI
-                                        txtFail.setText(e.getLocalizedMessage());
-                                        failOverlay.setVisibility(View.VISIBLE);
-                                        new Handler().postDelayed(() -> {
-                                            failOverlay.setVisibility(View.GONE);
-                                        }, 3000);
-                                    }
-                                });
-                            }
-                        }).start();
-                        runOnUiThread(() -> loadingDialog.dismiss());
-                    }
-                }).start();
-            }
-        });
-
-        btnEnd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                loadingDialog.show();
-                new Thread(() -> {
-                    try {
-                        Call<BlankModel> sessionCall = apiInterface.EndSession(sessionId);
-                        ResponseModel<BlankModel> sessionCallResponse = null;
+                    new Thread(() -> {
                         try {
+                            Call<BlankModel> sessionCall = apiInterface.IncreaseSession(session);
+                            ResponseModel<BlankModel> sessionCallResponse = null;
                             sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
-
                             ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
                             runOnUiThread(() -> {
-                                if (finalSessionCallResponse.Error == null &&
-                                        (finalSessionCallResponse.Content.ResponseCode == 200 || finalSessionCallResponse.Content.ResponseCode == 202)) {
+                                if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
 
-                                    if (finalSessionCallResponse.Content.ResponseCode == 200) {
-                                        txtSuccess.setText("Sayım tamamlandı. Rapor gönderildi.");
-                                    } else if (finalSessionCallResponse.Content.ResponseCode == 202) {
-                                        txtSuccess.setText("Sayım tamamlandı. Rapor gönderilemedi. IT'ye bilgi veriniz.");
-                                    }
-
-                                    confettiView.setVisibility(View.VISIBLE);
-                                    confettiView.playAnimation();
+                                    txtSuccess.setText(finalSessionCallResponse.Content.ResponseDesc+" Raf numarası:" + (selfNumber));
                                     successOverlay.setVisibility(View.VISIBLE);
-
-                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    new Handler().postDelayed(() -> {
                                         successOverlay.setVisibility(View.GONE);
                                     }, 3000);
 
-                                    confettiView.addAnimatorListener(new AnimatorListenerAdapter() {
+                                    clearTable();
+                                    selfNumber += 1;
+                                    txtSelfNumber.setText(""+selfNumber);
+                                    runOnUiThread(() -> loadingDialog.dismiss());
+                                }
+                                else if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 406){
+                                    new Thread(new Runnable() {
                                         @Override
-                                        public void onAnimationEnd(Animator animation) {
-                                            confettiView.setVisibility(View.GONE);
+                                        public void run() {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // update UI
+                                                    System.out.println(finalSessionCallResponse.ResponseCode);
+                                                    txtFail.setText("Malzemeler daha önceden kaydedilmiş. Tekrar tarama yapınız.");
+                                                    failOverlay.setVisibility(View.VISIBLE);
+                                                    new Handler().postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+
+                                                    txtSelfNumber.setText(""+selfNumber);
+                                                }
+                                            });
                                         }
-                                    });
+                                    }).start();
+                                    runOnUiThread(() -> loadingDialog.dismiss());
+                                }
+                                else {
+                                    ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // update UI
+                                                    txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                    failOverlay.setVisibility(View.VISIBLE);
+                                                    new Handler().postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                }
+                                            });
+                                        }
+                                    }).start();
+                                    runOnUiThread(() -> loadingDialog.dismiss());
 
-                                    btnStart.setVisibility(View.VISIBLE);
-                                    spinnerCabinet.setSelection(0);
-                                    cabinetNumber = null;
-                                    sessionId = 0;
-                                    btnNextShelf.setVisibility(View.INVISIBLE);
-                                    btnEnd.setVisibility(View.INVISIBLE);
-                                    txtScannerAnimationNumber.setText("0");
-
-                                    loadingDialog.dismiss();
-                                } else {
-                                    loadingDialog.dismiss();
-                                    txtFail.setText(finalSessionCallResponse.Error.ErrorDesc);
-                                    failOverlay.setVisibility(View.VISIBLE);
-
-                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                        failOverlay.setVisibility(View.GONE);
-                                    }, 3000);
+                                    txtSelfNumber.setText(""+selfNumber);
                                 }
                             });
-
                         } catch (ExecutionException e) {
                             new Thread(new Runnable() {
                                 @Override
@@ -666,14 +594,341 @@ public class StockTakingActivity extends AppCompatActivity {
                             }).start();
                             runOnUiThread(() -> loadingDialog.dismiss());
                         }
+                    }).start();
+                }
+                else{
+                    Toast.makeText(StockTakingActivity.this, "Önce tarama yapınız.", Toast.LENGTH_SHORT).show();
+                }
 
-                    } catch (Exception e) {
-                        loadingDialog.dismiss();
-                        System.out.println("HATA:" + e.getLocalizedMessage());
-                    }
+
+            }
+        });
+
+        btnEnd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                loadingDialog.show();
+
+                new Thread(() -> {
+
+                    IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, selfNumber, spinnerCabinet.getSelectedItem().toString(), EPCs);
+
+                    new Thread(() -> {
+                        try {
+                            Call<BlankModel> sessionCall = apiInterface.IncreaseSession(session);
+                            ResponseModel<BlankModel> sessionCallResponse = null;
+                            sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
+                            ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
+                            runOnUiThread(() -> {
+                                if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
+
+                                    try {
+                                        Call<BlankModel> sessionCall2 = apiInterface.EndSession(sessionId, true);
+                                        ResponseModel<BlankModel> sessionCallResponse2 = null;
+                                        try {
+                                            sessionCallResponse2 = new APICallAynscTask<BlankModel>().execute(sessionCall2).get();
+
+                                            ResponseModel<BlankModel> finalSessionCallResponse2 = sessionCallResponse2;
+                                            runOnUiThread(() -> {
+                                                if (finalSessionCallResponse2.Error == null &&
+                                                        (finalSessionCallResponse2.Content.ResponseCode == 200 || finalSessionCallResponse2.Content.ResponseCode == 202)) {
+
+                                                    if (finalSessionCallResponse2.Content.ResponseCode == 200) {
+                                                        txtSuccess.setText("Sayım tamamlandı. Rapor gönderildi.");
+                                                    } else if (finalSessionCallResponse2.Content.ResponseCode == 202) {
+                                                        txtSuccess.setText("Sayım tamamlandı. Rapor gönderilemedi. IT'ye bilgi veriniz.");
+                                                    }
+
+                                                    confettiView.setVisibility(View.VISIBLE);
+                                                    confettiView.playAnimation();
+                                                    successOverlay.setVisibility(View.VISIBLE);
+
+                                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                        successOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+
+                                                    confettiView.addAnimatorListener(new AnimatorListenerAdapter() {
+                                                        @Override
+                                                        public void onAnimationEnd(Animator animation) {
+                                                            confettiView.setVisibility(View.GONE);
+                                                        }
+                                                    });
+
+                                                    btnStart.setVisibility(View.VISIBLE);
+                                                    spinnerCabinet.setSelection(0);
+                                                    cabinetNumber = null;
+                                                    sessionId = 0;
+                                                    btnNextShelf.setVisibility(View.INVISIBLE);
+                                                    btnEnd.setVisibility(View.INVISIBLE);
+                                                    txtScannerAnimationNumber.setText("0");
+                                                    txtSelfNumber.setText("1");
+                                                    btnReset.setVisibility(View.INVISIBLE);
+                                                    btnCancel.setVisibility(View.INVISIBLE);
+                                                    clearTable();
+                                                    loadingDialog.dismiss();
+                                                } else {
+                                                    loadingDialog.dismiss();
+                                                    txtFail.setText(finalSessionCallResponse2.Error.ErrorDesc);
+                                                    failOverlay.setVisibility(View.VISIBLE);
+
+                                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                }
+                                            });
+
+                                        } catch (ExecutionException e) {
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            // update UI
+                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                            new Handler().postDelayed(() -> {
+                                                                failOverlay.setVisibility(View.GONE);
+                                                            }, 3000);
+                                                        }
+                                                    });
+                                                }
+                                            }).start();
+                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                        } catch (InterruptedException e) {
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            // update UI
+                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                            new Handler().postDelayed(() -> {
+                                                                failOverlay.setVisibility(View.GONE);
+                                                            }, 3000);
+                                                        }
+                                                    });
+                                                }
+                                            }).start();
+                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                        }
+
+                                    } catch (Exception e) {
+                                        loadingDialog.dismiss();
+                                        System.out.println("HATA:" + e.getLocalizedMessage());
+                                    }
+                                }
+                                else if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 406){
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // update UI
+                                                    System.out.println(finalSessionCallResponse.ResponseCode);
+                                                    txtFail.setText("Malzemeler daha önceden kaydedilmiş. Tekrar tarama yapınız.");
+                                                    failOverlay.setVisibility(View.VISIBLE);
+                                                    new Handler().postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                    selfNumber -= 1;
+                                                    txtSelfNumber.setText(""+selfNumber);
+                                                }
+                                            });
+                                        }
+                                    }).start();
+                                    runOnUiThread(() -> loadingDialog.dismiss());
+                                }
+                                else {
+                                    ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // update UI
+                                                    txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                    failOverlay.setVisibility(View.VISIBLE);
+                                                    new Handler().postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                }
+                                            });
+                                        }
+                                    }).start();
+                                    runOnUiThread(() -> loadingDialog.dismiss());
+                                    selfNumber -= 1;
+                                    txtSelfNumber.setText(""+selfNumber);
+                                }
+                            });
+                        } catch (ExecutionException e) {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // update UI
+                                            txtFail.setText(e.getLocalizedMessage());
+                                            failOverlay.setVisibility(View.VISIBLE);
+                                            new Handler().postDelayed(() -> {
+                                                failOverlay.setVisibility(View.GONE);
+                                            }, 3000);
+                                        }
+                                    });
+                                }
+                            }).start();
+                            runOnUiThread(() -> loadingDialog.dismiss());
+                        } catch (InterruptedException e) {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // update UI
+                                            txtFail.setText(e.getLocalizedMessage());
+                                            failOverlay.setVisibility(View.VISIBLE);
+                                            new Handler().postDelayed(() -> {
+                                                failOverlay.setVisibility(View.GONE);
+                                            }, 3000);
+                                        }
+                                    });
+                                }
+                            }).start();
+                            runOnUiThread(() -> loadingDialog.dismiss());
+                        }
+                    }).start();
+
+
                 }).start();
 
 
+            }
+        });
+
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                clearTable();
+                Toast.makeText(StockTakingActivity.this, "Tarama sıfırlandı...", Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                new AlertDialog.Builder(StockTakingActivity.this)
+                        .setTitle("UYARI")
+                        .setMessage("Sayım iptal edilecek. Onaylıyor musunuz?")
+                        .setCancelable(false) // dışarı tıklanınca kapanmaz
+                        .setPositiveButton("Evet", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Evet seçildiğinde yapılacaklar
+                                loadingDialog.show();
+                                new Thread(() -> {
+                                    try {
+                                        Call<BlankModel> sessionCall = apiInterface.EndSession(sessionId, false);
+                                        ResponseModel<BlankModel> sessionCallResponse = null;
+                                        try {
+                                            sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
+
+                                            ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
+                                            runOnUiThread(() -> {
+                                                if (finalSessionCallResponse.Error == null &&
+                                                        (finalSessionCallResponse.Content.ResponseCode == 200 || finalSessionCallResponse.Content.ResponseCode == 202)) {
+
+                                                    txtSuccess.setText("Sayım iptal edildi.");
+                                                    successOverlay.setVisibility(View.VISIBLE);
+
+                                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                        successOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+
+                                                    btnStart.setVisibility(View.VISIBLE);
+                                                    spinnerCabinet.setSelection(0);
+                                                    cabinetNumber = null;
+                                                    sessionId = 0;
+                                                    btnNextShelf.setVisibility(View.INVISIBLE);
+                                                    btnEnd.setVisibility(View.INVISIBLE);
+                                                    btnReset.setVisibility(View.INVISIBLE);
+                                                    btnCancel.setVisibility(View.INVISIBLE);
+
+                                                    txtScannerAnimationNumber.setText("0");
+                                                    txtSelfNumber.setText("1");
+                                                    clearTable();
+                                                    loadingDialog.dismiss();
+                                                } else {
+                                                    loadingDialog.dismiss();
+                                                    txtFail.setText(finalSessionCallResponse.Error.ErrorDesc);
+                                                    failOverlay.setVisibility(View.VISIBLE);
+
+                                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                }
+                                            });
+
+                                        } catch (ExecutionException e) {
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            // update UI
+                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                            new Handler().postDelayed(() -> {
+                                                                failOverlay.setVisibility(View.GONE);
+                                                            }, 3000);
+                                                        }
+                                                    });
+                                                }
+                                            }).start();
+                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                        } catch (InterruptedException e) {
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            // update UI
+                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                            new Handler().postDelayed(() -> {
+                                                                failOverlay.setVisibility(View.GONE);
+                                                            }, 3000);
+                                                        }
+                                                    });
+                                                }
+                                            }).start();
+                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                        }
+
+                                    } catch (Exception e) {
+                                        loadingDialog.dismiss();
+                                        System.out.println("HATA:" + e.getLocalizedMessage());
+                                    }
+                                }).start();
+                            }
+                        })
+                        .setNegativeButton("Hayır", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Hayır seçildiğinde yapılacaklar
+                                dialog.dismiss();
+                            }
+                        })
+                        .show();
             }
         });
 
@@ -700,6 +955,7 @@ public class StockTakingActivity extends AppCompatActivity {
 
                                         if (sessionCallResponse.Error == null && sessionCallResponse.Content.ResponseCode == 200) {
                                             selfNumber = 1;
+                                            txtSelfNumber.setText(""+selfNumber);
                                             txtSuccess.setText(spinnerCabinet.getSelectedItem().toString() + " dolabına geçildi. Raf numarası:" + selfNumber);
                                             successOverlay.setVisibility(View.VISIBLE);
                                             new Handler().postDelayed(() -> {
@@ -814,13 +1070,20 @@ public class StockTakingActivity extends AppCompatActivity {
                 btnStart.setVisibility(View.INVISIBLE); // görünmez yapar
                 sessionId = sessionCheckCallResponse.Content.Data.get(0).Id;
                 selfNumber = sessionCheckCallResponse.Content.Data.get(0).LatestShelfNumber;
+                System.out.println("Self Number:"+ selfNumber);
+                selfNumber = selfNumber + 1;
+                txtSelfNumber.setText(""+selfNumber);
                 cabinetNumber = sessionCheckCallResponse.Content.Data.get(0).LatestCabinetNumber;
                 runOnUiThread(() -> loadingDialog.dismiss());
             } else {
                 runOnUiThread(() -> loadingDialog.dismiss());
                 btnNextShelf.setVisibility(View.INVISIBLE);
                 btnEnd.setVisibility(View.INVISIBLE);
+                btnReset.setVisibility(View.INVISIBLE);
+                btnCancel.setVisibility(View.INVISIBLE);
                 sessionId = 0;
+                selfNumber = 1;
+                txtSelfNumber.setText("1");
             }
         } catch (ExecutionException e) {
             new Thread(new Runnable() {
@@ -870,7 +1133,16 @@ public class StockTakingActivity extends AppCompatActivity {
             ConnectRFIDReader();
         }
 
+
     }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        Toast.makeText(this, "Lütfen ekrandaki geri butonunu kullanınız...", Toast.LENGTH_SHORT).show();
+        // super.onBackPressed(); // Çağırma
+    }
+
 
     private void showEmptyMessage() {
         // Zaten varsa tekrar ekleme
@@ -949,7 +1221,7 @@ public class StockTakingActivity extends AppCompatActivity {
         new Thread(() -> {
             runOnUiThread(() -> {
                 txtEpcCount.setText(String.valueOf(EPCs.size()));
-                //txtScannerAnimationNumber.setText(String.valueOf(EPCs.size()));
+                txtScannerAnimationNumber.setText(String.valueOf(EPCs.size()));
             });
         }).start();
     }
@@ -1038,13 +1310,14 @@ public class StockTakingActivity extends AppCompatActivity {
                                 }
                                 readerDevice = availableRFIDReaderList.get(0);
                                 reader = readerDevice.getRFIDReader();
-                                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
+
                                 System.out.println("Reader is connected:"+reader.isConnected());
                                 if (!reader.isConnected()) {
                                     // Establish connection to the RFID Reader
                                     System.out.println("Reader connecting");
                                     reader.connect();
                                     System.out.println("Reader connected");
+                                    //reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     ConfigureReader();
                                     // tag event with tag data
                                     System.out.println("Reader configured");
@@ -1052,7 +1325,9 @@ public class StockTakingActivity extends AppCompatActivity {
                                     return true;
                                 }
                                 else{
+                                    //reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     ConfigureReader();
+                                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                                 }
                             }
                         }
@@ -1060,9 +1335,11 @@ public class StockTakingActivity extends AppCompatActivity {
                 } catch (InvalidUsageException e) {
                     System.out.println(e.getVendorMessage());
                     e.printStackTrace();
+                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                 } catch (OperationFailureException e) {
                     System.out.println(e.getVendorMessage());
                     e.printStackTrace();
+                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                 }
                 return false;
             }
@@ -1094,6 +1371,7 @@ public class StockTakingActivity extends AppCompatActivity {
                 reader.Config.setStartTrigger(triggerInfo.StartTrigger);
                 reader.Config.setStopTrigger(triggerInfo.StopTrigger);
 
+
                 POWER_EVENT power = new POWER_EVENT();
                 power.setPower(500);
 
@@ -1119,7 +1397,9 @@ public class StockTakingActivity extends AppCompatActivity {
                 reader.Config.setAccessOperationWaitTimeout(100);
 
             } catch (InvalidUsageException e) {
+
             } catch (OperationFailureException e) {
+
             }
         }
     }
@@ -1159,18 +1439,21 @@ public class StockTakingActivity extends AppCompatActivity {
         // Status Event Notification
         public void eventStatusNotify(RfidStatusEvents rfidStatusEvents) {
 
+            System.out.println("RFID_Event_State: " + rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent());
             if (rfidStatusEvents.StatusEventData.getStatusEventType() == STATUS_EVENT_TYPE.HANDHELD_TRIGGER_EVENT) {
                 if (rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent() == HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_PRESSED) {
                     //SetTextView("Butona basıldı");
                     System.out.println("BUTONA BASILDI!!!");
+                    System.out.println("isRFIDPerforming:"+isRFIDPerforming);
 
 
                     try {
 
                         if (!isRFIDPerforming)
                         {
+
                             reader.Actions.Inventory.perform();
-                            isRFIDPerforming = true;
+
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1178,9 +1461,11 @@ public class StockTakingActivity extends AppCompatActivity {
                                         @Override
                                         public void run() {
                                             // update UI
-                                            if (!scannerDialog.isShowing()) {
+                                            if (scannerDialog  != null && !scannerDialog.isShowing() && !isDestroyed() && !isFinishing()) {
                                                 scannerDialog.show();
+                                                isRFIDPerforming = true;
                                             }
+
                                         }
                                     });
                                 }
@@ -1196,13 +1481,14 @@ public class StockTakingActivity extends AppCompatActivity {
                 if (rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent() == HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_RELEASED) {
 
                     System.out.println("BUTON BIRAKILDI!!!");
+                    System.out.println("isRFIDPerforming: " + isRFIDPerforming);
 
                     try {
 
 
                         if (isRFIDPerforming){
                             reader.Actions.Inventory.stop();
-                            isRFIDPerforming = false;
+
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -1212,6 +1498,7 @@ public class StockTakingActivity extends AppCompatActivity {
                                             // update UI
                                             if (scannerDialog.isShowing()){
                                                 scannerDialog.dismiss();
+                                                isRFIDPerforming = false;
                                             }
                                         }
                                     });

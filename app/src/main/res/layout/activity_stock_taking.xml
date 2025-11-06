@@ -97,31 +97,94 @@
             </TableRow>
 
         </TableLayout>
-        <TextView
-            android:id="@+id/txtCupboard"
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="6dp"
-            android:fontFamily="@font/sans"
-            android:gravity="start"
-            android:text="Dolap Numarası"
-            android:textColor="#20262B"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-        <Spinner
-            android:id="@+id/cupboardIdentifier"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="6dp"
-            android:background="@drawable/text_bg"
-            android:dropDownVerticalOffset="8dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:spinnerMode="dropdown" />
+            android:orientation="horizontal">
+
+            <!-- Sol: %80 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtCupboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="@font/sans"
+                    android:gravity="start"
+                    android:text="Dolap Numarası"
+                    android:textColor="#20262B"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/cupboardIdentifier"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/text_bg"
+                    android:dropDownVerticalOffset="8dp"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:spinnerMode="dropdown" />
+            </LinearLayout>
+
+            <!-- Sağ: %20 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="right">
+
+                <com.example.rndlaboratorystock.Classes.AnimatedButton
+                    android:id="@+id/btnStart"
+                    android:layout_width="80dp"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginLeft="5dp"
+                    android:background="@drawable/button_bg"
+                    android:fontFamily="@font/sans"
+                    android:text="BAŞLA"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="right">
+
+                <com.example.rndlaboratorystock.Classes.AnimatedButton
+                    android:id="@+id/btnCancel"
+                    android:layout_width="80dp"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginLeft="5dp"
+                    android:background="@drawable/button_bg"
+                    android:fontFamily="@font/sans"
+                    android:text="IPTAL"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+
+
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -139,14 +202,14 @@
                 android:orientation="vertical">
 
                 <com.example.rndlaboratorystock.Classes.AnimatedButton
-                    android:id="@+id/btnStart"
+                    android:id="@+id/btnReset"
                     android:layout_width="80dp"
                     android:layout_height="50dp"
                     android:layout_gravity="start"
                     android:layout_marginBottom="5dp"
                     android:background="@drawable/button_bg"
                     android:fontFamily="@font/sans"
-                    android:text="BAŞLA"
+                    android:text="RESET"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -181,10 +244,9 @@
                     <TextView
                         android:fontFamily="@font/sans"
                         android:gravity="center"
-                        android:padding="8dp"
                         android:text="RFID ADET"
                         android:textColor="#FFFFFF"
-                        android:textSize="16sp"
+                        android:textSize="10sp"
                         android:textStyle="bold" />
 
                 </TableRow>
@@ -198,9 +260,40 @@
                     <TextView
                         android:id="@+id/txtEpcCount"
                         android:gravity="center"
-                        android:padding="6dp"
                         android:text="0"
-                        android:textSize="26sp"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#20262B"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:fontFamily="@font/sans"
+                        android:gravity="center"
+                        android:text="RAF NUMRASI"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#FFFFFF"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/txtSelfNumber"
+                        android:gravity="center"
+                        android:text="0"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
 

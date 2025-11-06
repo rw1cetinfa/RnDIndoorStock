@@ -2,6 +2,7 @@ package com.example.rndlaboratorystock;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -28,6 +29,7 @@ import android.widget.FrameLayout;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.rndlaboratorystock.Classes.APICallAynscTask;
@@ -71,6 +73,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
+import kotlin.Suppress;
 import retrofit2.Call;
 
 public class RfidWriteActivity extends AppCompatActivity {
@@ -274,13 +277,26 @@ public class RfidWriteActivity extends AppCompatActivity {
         adapter3.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spShelfNumber.setAdapter(adapter3);
 
+
+
+
         Spinner spMaterialNumber = findViewById(R.id.materialNumber);
-        ArrayAdapter<String> adapter4 = new ArrayAdapter<>(
+        /*ArrayAdapter<String> adapter4 = new ArrayAdapter<>(
                 this,
                 R.layout.spinner_item,
                 new String[]{"Adet seçiniz", "1", "2", "3", "4", "5", "6",
                         "7", "8", "9"
-                });
+                });*/
+        List<String> items2 = new ArrayList<>();
+        items2.add("Adet seçiniz"); // ilk eleman sabit
+        for (int i = 1; i <= 99; i++) {
+            items2.add(String.valueOf(i));
+        }
+        ArrayAdapter<String> adapter4 = new ArrayAdapter<>(
+                this,
+                R.layout.spinner_item,
+                items2
+        );
         adapter4.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spMaterialNumber.setAdapter(adapter4);
 
@@ -372,9 +388,9 @@ public class RfidWriteActivity extends AppCompatActivity {
                     txtRFIDToBeWritten.setText(
                             StringHelper.replaceSubstring(
                                     txtRFIDToBeWritten.getText().toString(),
-                                    23,
+                                    22,
                                     2,
-                                    selectedMaterialNumber
+                                    formatted
                             )
                     );
                 }
@@ -569,6 +585,15 @@ public class RfidWriteActivity extends AppCompatActivity {
             ConnectRFIDReader();
 
         }
+
+
+    }
+
+    @SuppressLint("MissingSuperCall")
+    @Override
+    public void onBackPressed() {
+        Toast.makeText(this, "Lütfen ekrandaki geri butonunu kullanınız...", Toast.LENGTH_SHORT).show();
+        // super.onBackPressed(); // Çağırma
     }
 
     public void ConnectRFIDReader(){
@@ -587,12 +612,13 @@ public class RfidWriteActivity extends AppCompatActivity {
                                 }
                                 readerDevice = availableRFIDReaderList.get(0);
                                 reader = readerDevice.getRFIDReader();
-                                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
+
                                 System.out.println("Reader is connected:"+reader.isConnected());
                                 if (!reader.isConnected()) {
                                     // Establish connection to the RFID Reader
                                     System.out.println("Reader connecting");
                                     reader.connect();
+                                    reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     System.out.println("Reader connected");
                                     ConfigureReader();
                                     // tag event with tag data
@@ -601,7 +627,9 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     return true;
                                 }
                                 else{
+                                    reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     ConfigureReader();
+                                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                                 }
                             }
                         }
@@ -609,9 +637,11 @@ public class RfidWriteActivity extends AppCompatActivity {
                 } catch (InvalidUsageException e) {
                     System.out.println(e.getVendorMessage());
                     e.printStackTrace();
+                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                 } catch (OperationFailureException e) {
                     System.out.println(e.getVendorMessage());
                     e.printStackTrace();
+                    runOnUiThread(() -> loadingDialogRFID.dismiss());
                 }
                 return false;
             }
