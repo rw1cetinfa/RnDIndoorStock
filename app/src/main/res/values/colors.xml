@@ -7,4 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="nav_item_selected">#FFBB86FC</color> <!-- mor ton -->
+    <color name="nav_item_normal_bg">#FFEFEFEF</color> <!-- hafif gri -->
+    <!-- Normal menü yazı ve ikon renkleri -->
+    <color name="nav_item_text">#20262B</color>
+    <color name="nav_item_icon">#20262B</color>
 </resources>

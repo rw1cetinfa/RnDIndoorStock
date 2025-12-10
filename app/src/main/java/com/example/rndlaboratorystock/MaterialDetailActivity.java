@@ -231,6 +231,15 @@ public class MaterialDetailActivity extends AppCompatActivity {
                                         }
                                     }).start();
                                     runOnUiThread(() -> loadingDialog.dismiss());
+                                    txtBrand.setText("");
+                                    txtBrandCode.setText("");
+                                    txtAmount.setText("");
+                                    txtUnit.setText("");
+                                    txtChemicalName.setText("");
+                                    txtCompanyName.setText("");
+                                    txtItemNumber.setText(String.valueOf(""));
+                                    txtRemain.setText(String.valueOf(""));
+
                                     editTextRFID.setText("");
                                     editTextRFID.requestFocus();
                                 }

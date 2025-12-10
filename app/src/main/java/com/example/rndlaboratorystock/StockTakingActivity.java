@@ -2,6 +2,9 @@ package com.example.rndlaboratorystock;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.FragmentManager;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -29,6 +32,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -38,6 +42,7 @@ import android.widget.Toast;
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.rndlaboratorystock.Classes.APICallAynscTask;
 import com.example.rndlaboratorystock.Classes.APIClient;
+import com.example.rndlaboratorystock.Classes.NumberPickerDialogFragment;
 import com.example.rndlaboratorystock.Helpers.StringHelper;
 import com.example.rndlaboratorystock.Interfaces.APIInterface;
 import com.example.rndlaboratorystock.Models.BlankModel;
@@ -45,8 +50,10 @@ import com.example.rndlaboratorystock.Models.DateAndWeekResponseModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
 import com.example.rndlaboratorystock.Models.RndLaboratoryResponseSession;
+import com.example.rndlaboratorystock.Models.RndLaboratoryRssiFilter;
 import com.example.rndlaboratorystock.Models.SessionPostModel;
 import com.example.rndlaboratorystock.Models.UserResponseModel;
+import com.google.android.material.navigation.NavigationView;
 import com.zebra.rfid.api3.Antennas;
 import com.zebra.rfid.api3.ENUM_TRANSPORT;
 import com.zebra.rfid.api3.ENUM_TRIGGER_MODE;
@@ -108,6 +115,8 @@ public class StockTakingActivity extends AppCompatActivity {
     private int sessionId;
     private int selfNumber;
     private String cabinetNumber;
+    private String previousCabinetNumber;
+    private String currentCabinetNumber;
 
     List<String> EPCs;
 
@@ -127,6 +136,14 @@ public class StockTakingActivity extends AppCompatActivity {
 
     Dialog loadingDialog;
     Dialog loadingDialogRFID;
+
+    ImageView imgNav;
+    DrawerLayout drawerLayout;
+    NavigationView navigationView;
+
+    int rssiFilter = 0;
+
+    Spinner spinnerCabinet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,6 +196,7 @@ public class StockTakingActivity extends AppCompatActivity {
 
         // Lottie animasyonunu popup'ta başlatıyoruz
         LottieAnimationView popupAnimation2 = loadingDialogRFID.findViewById(R.id.loadingAnimation);
+
         popupAnimation2.playAnimation();  // Animasyonu başlat
 
         // Popup'ı gösteriyoruz
@@ -217,8 +235,99 @@ public class StockTakingActivity extends AppCompatActivity {
         txtWeek = findViewById(R.id.txtWeek);
         txtSelfNumber = findViewById(R.id.txtSelfNumber);
 
+        imgNav = findViewById(R.id.imgNav);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.navigationView);
 
-        Spinner spinnerCabinet = findViewById(R.id.cupboardIdentifier);
+        imgNav.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                } else {
+                    drawerLayout.openDrawer(GravityCompat.START);
+                }
+            }
+        });
+
+        Call<RndLaboratoryRssiFilter> rssiFilterCall = apiInterface.GetRSSI();
+        ResponseModel<RndLaboratoryRssiFilter> rssiFilterCallResponse = null;
+        try {
+            rssiFilterCallResponse = new APICallAynscTask<RndLaboratoryRssiFilter>().execute(rssiFilterCall).get();
+            if (rssiFilterCallResponse.Error == null && rssiFilterCallResponse.Content.ResponseCode == 200) {
+                RndLaboratoryRssiFilter.Data response = rssiFilterCallResponse.Content.Data.get(0);
+
+                rssiFilter = response.Rssi;
+
+            } else {
+
+                ResponseModel<RndLaboratoryRssiFilter> finalDateAndWeekResponseModel = rssiFilterCallResponse;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // update UI
+                                txtFail.setText(finalDateAndWeekResponseModel.Error.ErrorDesc);
+                                failOverlay.setVisibility(View.VISIBLE);
+                                new Handler().postDelayed(() -> {
+                                    failOverlay.setVisibility(View.GONE);
+                                }, 3000);
+                            }
+                        });
+                    }
+                }).start();
+            }
+        } catch (ExecutionException e) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // update UI
+                            txtFail.setText(e.getLocalizedMessage());
+                            failOverlay.setVisibility(View.VISIBLE);
+                            new Handler().postDelayed(() -> {
+                                failOverlay.setVisibility(View.GONE);
+                            }, 3000);
+                        }
+                    });
+                }
+            }).start();
+        } catch (InterruptedException e) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // update UI
+                            txtFail.setText(e.getLocalizedMessage());
+                            failOverlay.setVisibility(View.VISIBLE);
+                            new Handler().postDelayed(() -> {
+                                failOverlay.setVisibility(View.GONE);
+                            }, 3000);
+                        }
+                    });
+                }
+            }).start();
+        }
+
+        navigationView.setNavigationItemSelectedListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.nav_rssi:
+
+                    showNumberPicker(rssiFilter, -80, 0, 1, "RSSI Seçim Ekranı");
+                    break;
+
+            }
+            drawerLayout.closeDrawers();
+            return true;
+        });
+
+        spinnerCabinet = findViewById(R.id.cupboardIdentifier);
         ArrayAdapter<String> adapter2 = new ArrayAdapter<>(
                 this,
                 R.layout.spinner_item,
@@ -241,9 +350,7 @@ public class StockTakingActivity extends AppCompatActivity {
         // Başlangıçta "veri yok" göster
         showEmptyMessage();
 
-        //addRows("301512312312312312312312");
-        //addRows("301512312312312312312312");
-        //addRows("301512312312312312312313");
+
 
         Call<DateAndWeekResponseModel> dateAndTimeCall = apiInterface.GetDateAndWeek();
         ResponseModel<DateAndWeekResponseModel> dateAndTimeCallResponse = null;
@@ -500,7 +607,7 @@ public class StockTakingActivity extends AppCompatActivity {
                             ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
                             runOnUiThread(() -> {
                                 if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
-
+                                    selfNumber += 1;
                                     txtSuccess.setText(finalSessionCallResponse.Content.ResponseDesc+" Raf numarası:" + (selfNumber));
                                     successOverlay.setVisibility(View.VISIBLE);
                                     new Handler().postDelayed(() -> {
@@ -508,7 +615,7 @@ public class StockTakingActivity extends AppCompatActivity {
                                     }, 3000);
 
                                     clearTable();
-                                    selfNumber += 1;
+
                                     txtSelfNumber.setText(""+selfNumber);
                                     runOnUiThread(() -> loadingDialog.dismiss());
                                 }
@@ -933,12 +1040,15 @@ public class StockTakingActivity extends AppCompatActivity {
         });
 
         spinnerCabinet.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 // Seçilen elemanı al
-                String selectedCabinet = parent.getItemAtPosition(position).toString();
+                previousCabinetNumber = currentCabinetNumber;
 
-                if (!selectedCabinet.equals(cabinetNumber) && cabinetNumber != null) {
+                currentCabinetNumber = parent.getItemAtPosition(position).toString();
+
+                if (!currentCabinetNumber.equals(cabinetNumber) && cabinetNumber != null) {
                     new AlertDialog.Builder(StockTakingActivity.this)
                             .setTitle("UYARI")
                             .setMessage("Farklı bir dolaba geçilecek onaylıyor musunuz?")
@@ -946,86 +1056,195 @@ public class StockTakingActivity extends AppCompatActivity {
                             .setPositiveButton("Evet", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     // Evet seçildiğinde yapılacaklar
-                                    IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, 1, spinnerCabinet.getSelectedItem().toString(), EPCs);
 
-                                    Call<BlankModel> sessionCall = apiInterface.UpdateSession(session);
-                                    ResponseModel<BlankModel> sessionCallResponse = null;
-                                    try {
-                                        sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
+                                    loadingDialog.show();
 
-                                        if (sessionCallResponse.Error == null && sessionCallResponse.Content.ResponseCode == 200) {
-                                            selfNumber = 1;
-                                            txtSelfNumber.setText(""+selfNumber);
-                                            txtSuccess.setText(spinnerCabinet.getSelectedItem().toString() + " dolabına geçildi. Raf numarası:" + selfNumber);
-                                            successOverlay.setVisibility(View.VISIBLE);
-                                            new Handler().postDelayed(() -> {
-                                                successOverlay.setVisibility(View.GONE);
-                                            }, 2000);
+                                    new Thread(() -> {
 
-                                            btnStart.setVisibility(View.INVISIBLE); // görünmez yapar
-                                            cabinetNumber = spinnerCabinet.getSelectedItem().toString();
+                                        IncreaseShelfPostModel session2 = new IncreaseShelfPostModel(sessionId, selfNumber, previousCabinetNumber, EPCs);
 
-                                            clearTable();
-                                            new Handler().postDelayed(() -> {
-                                                addRows("301512312312312312312312");
-                                            }, 2000);
-                                        } else {
-                                            ResponseModel<BlankModel> finalsessionCallResponse = sessionCallResponse;
-                                            new Thread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            // update UI
-                                                            txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
-                                                            failOverlay.setVisibility(View.VISIBLE);
-                                                            new Handler().postDelayed(() -> {
-                                                                failOverlay.setVisibility(View.GONE);
-                                                            }, 3000);
+                                        new Thread(() -> {
+                                            try {
+                                                Call<BlankModel> sessionCall2 = apiInterface.IncreaseSession(session2);
+                                                ResponseModel<BlankModel> sessionCallResponse2 = null;
+                                                sessionCallResponse2 = new APICallAynscTask<BlankModel>().execute(sessionCall2).get();
+                                                ResponseModel<BlankModel> finalSessionCallResponse2 = sessionCallResponse2;
+                                                runOnUiThread(() -> {
+                                                    if (finalSessionCallResponse2.Error == null && finalSessionCallResponse2.Content.ResponseCode == 200) {
 
-                                                            int position = adapter2.getPosition(cabinetNumber);
-                                                            spinnerCabinet.setSelection(position);
+                                                        IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, 1, spinnerCabinet.getSelectedItem().toString(), EPCs);
+
+                                                        Call<BlankModel> sessionCall = apiInterface.UpdateSession(session);
+                                                        ResponseModel<BlankModel> sessionCallResponse = null;
+                                                        try {
+                                                            sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
+
+                                                            if (sessionCallResponse.Error == null && sessionCallResponse.Content.ResponseCode == 200) {
+                                                                runOnUiThread(() -> loadingDialog.dismiss());
+                                                                selfNumber = 1;
+                                                                txtSelfNumber.setText(""+selfNumber);
+                                                                txtSuccess.setText(spinnerCabinet.getSelectedItem().toString() + " dolabına geçildi. Raf numarası:" + selfNumber);
+                                                                successOverlay.setVisibility(View.VISIBLE);
+                                                                new Handler().postDelayed(() -> {
+                                                                    successOverlay.setVisibility(View.GONE);
+                                                                }, 2000);
+
+                                                                btnStart.setVisibility(View.INVISIBLE); // görünmez yapar
+                                                                cabinetNumber = spinnerCabinet.getSelectedItem().toString();
+
+                                                                clearTable();
+
+                                                            } else {
+                                                                runOnUiThread(() -> loadingDialog.dismiss());
+                                                                ResponseModel<BlankModel> finalsessionCallResponse = sessionCallResponse;
+                                                                new Thread(new Runnable() {
+                                                                    @Override
+                                                                    public void run() {
+                                                                        runOnUiThread(new Runnable() {
+                                                                            @Override
+                                                                            public void run() {
+                                                                                // update UI
+                                                                                txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                                                failOverlay.setVisibility(View.VISIBLE);
+                                                                                new Handler().postDelayed(() -> {
+                                                                                    failOverlay.setVisibility(View.GONE);
+                                                                                }, 3000);
+
+                                                                                int position = adapter2.getPosition(cabinetNumber);
+                                                                                spinnerCabinet.setSelection(position);
+                                                                            }
+                                                                        });
+                                                                    }
+                                                                }).start();
+                                                            }
+                                                        } catch (ExecutionException e) {
+                                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                                            new Thread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    runOnUiThread(new Runnable() {
+                                                                        @Override
+                                                                        public void run() {
+                                                                            // update UI
+                                                                            txtFail.setText(e.getLocalizedMessage());
+                                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                                            new Handler().postDelayed(() -> {
+                                                                                failOverlay.setVisibility(View.GONE);
+                                                                            }, 3000);
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }).start();
+                                                        } catch (InterruptedException e) {
+                                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                                            new Thread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    runOnUiThread(new Runnable() {
+                                                                        @Override
+                                                                        public void run() {
+                                                                            // update UI
+                                                                            txtFail.setText(e.getLocalizedMessage());
+                                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                                            new Handler().postDelayed(() -> {
+                                                                                failOverlay.setVisibility(View.GONE);
+                                                                            }, 3000);
+                                                                        }
+                                                                    });
+                                                                }
+                                                            }).start();
                                                         }
-                                                    });
-                                                }
-                                            }).start();
-                                        }
-                                    } catch (ExecutionException e) {
-                                        new Thread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                runOnUiThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        // update UI
-                                                        txtFail.setText(e.getLocalizedMessage());
-                                                        failOverlay.setVisibility(View.VISIBLE);
-                                                        new Handler().postDelayed(() -> {
-                                                            failOverlay.setVisibility(View.GONE);
-                                                        }, 3000);
+
+                                                    }
+                                                    else if (finalSessionCallResponse2.Error != null && finalSessionCallResponse2.Error.ErrorCode == 406){
+                                                        new Thread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                runOnUiThread(new Runnable() {
+                                                                    @Override
+                                                                    public void run() {
+                                                                        // update UI
+                                                                        System.out.println(finalSessionCallResponse2.ResponseCode);
+                                                                        txtFail.setText("Malzemeler daha önceden kaydedilmiş. Tekrar tarama yapınız.");
+                                                                        failOverlay.setVisibility(View.VISIBLE);
+                                                                        new Handler().postDelayed(() -> {
+                                                                            failOverlay.setVisibility(View.GONE);
+                                                                        }, 3000);
+                                                                        selfNumber -= 1;
+                                                                        txtSelfNumber.setText(""+selfNumber);
+                                                                    }
+                                                                });
+                                                            }
+                                                        }).start();
+                                                        runOnUiThread(() -> loadingDialog.dismiss());
+                                                    }
+                                                    else {
+                                                        ResponseModel<BlankModel> finalsessionCallResponse2 = finalSessionCallResponse2;
+                                                        new Thread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                runOnUiThread(new Runnable() {
+                                                                    @Override
+                                                                    public void run() {
+                                                                        // update UI
+                                                                        txtFail.setText(finalsessionCallResponse2.Error.ErrorDesc);
+                                                                        failOverlay.setVisibility(View.VISIBLE);
+                                                                        new Handler().postDelayed(() -> {
+                                                                            failOverlay.setVisibility(View.GONE);
+                                                                        }, 3000);
+                                                                    }
+                                                                });
+                                                            }
+                                                        }).start();
+                                                        runOnUiThread(() -> loadingDialog.dismiss());
+                                                        selfNumber -= 1;
+                                                        txtSelfNumber.setText(""+selfNumber);
                                                     }
                                                 });
-                                            }
-                                        }).start();
-                                    } catch (InterruptedException e) {
-                                        new Thread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                runOnUiThread(new Runnable() {
+                                            } catch (ExecutionException e) {
+                                                new Thread(new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        // update UI
-                                                        txtFail.setText(e.getLocalizedMessage());
-                                                        failOverlay.setVisibility(View.VISIBLE);
-                                                        new Handler().postDelayed(() -> {
-                                                            failOverlay.setVisibility(View.GONE);
-                                                        }, 3000);
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                // update UI
+                                                                txtFail.setText(e.getLocalizedMessage());
+                                                                failOverlay.setVisibility(View.VISIBLE);
+                                                                new Handler().postDelayed(() -> {
+                                                                    failOverlay.setVisibility(View.GONE);
+                                                                }, 3000);
+                                                            }
+                                                        });
                                                     }
-                                                });
+                                                }).start();
+                                                runOnUiThread(() -> loadingDialog.dismiss());
+                                            } catch (InterruptedException e) {
+                                                new Thread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                // update UI
+                                                                txtFail.setText(e.getLocalizedMessage());
+                                                                failOverlay.setVisibility(View.VISIBLE);
+                                                                new Handler().postDelayed(() -> {
+                                                                    failOverlay.setVisibility(View.GONE);
+                                                                }, 3000);
+                                                            }
+                                                        });
+                                                    }
+                                                }).start();
+                                                runOnUiThread(() -> loadingDialog.dismiss());
                                             }
                                         }).start();
-                                    }
+
+
+                                    }).start();
+
+
+
                                 }
                             })
                             .setNegativeButton("Hayır", new DialogInterface.OnClickListener() {
@@ -1136,6 +1355,92 @@ public class StockTakingActivity extends AppCompatActivity {
 
     }
 
+    private void showNumberPicker(int initial, int min, int max, int step, String title) {
+        // offset ile negatif değerleri yönetiyoruz
+        NumberPickerDialogFragment dialog = new NumberPickerDialogFragment(
+                initial, min, max, step, title,
+                value -> {
+                    // Seçilen değer burada gelir (-80 ile 0 arası)
+                    rssiFilter = value;
+
+
+                    new Thread(() -> {
+                        Call<BlankModel> sessionCall = apiInterface.UpdateRSSI(rssiFilter);
+                        ResponseModel<BlankModel> sessionCallResponse = null;
+                        try {
+                                sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
+
+                                ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
+                                runOnUiThread(() -> {
+                                    if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
+                                        txtSuccess.setText("RSSI değeri güncellendi.");
+                                        successOverlay.setVisibility(View.VISIBLE);
+                                        new Handler().postDelayed(() -> {
+                                            successOverlay.setVisibility(View.GONE);
+                                        }, 2000);
+                                    } else {
+                                        ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        // update UI
+                                                        txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                        failOverlay.setVisibility(View.VISIBLE);
+                                                        new Handler().postDelayed(() -> {
+                                                            failOverlay.setVisibility(View.GONE);
+                                                        }, 3000);
+                                                    }
+                                                });
+                                            }
+                                        }).start();
+                                    }
+                                });
+                            } catch (ExecutionException e) {
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                // update UI
+                                                txtFail.setText(e.getLocalizedMessage());
+                                                failOverlay.setVisibility(View.VISIBLE);
+                                                new Handler().postDelayed(() -> {
+                                                    failOverlay.setVisibility(View.GONE);
+                                                }, 3000);
+                                            }
+                                        });
+                                    }
+                                }).start();
+                            } catch (InterruptedException e) {
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                // update UI
+                                                txtFail.setText(e.getLocalizedMessage());
+                                                failOverlay.setVisibility(View.VISIBLE);
+                                                new Handler().postDelayed(() -> {
+                                                    failOverlay.setVisibility(View.GONE);
+                                                }, 3000);
+                                            }
+                                        });
+                                    }
+                                }).start();
+                                runOnUiThread(() -> loadingDialog.dismiss());
+                            }
+                    }).start();
+
+                });
+
+        dialog.show(getSupportFragmentManager(), "numberPicker");
+    }
+
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
@@ -1175,6 +1480,13 @@ public class StockTakingActivity extends AppCompatActivity {
         {
             hideEmptyMessage();
 
+            char thirdFromEnd = epc.charAt(epc.length() - 3);
+            int shelfN = Character.getNumericValue(thirdFromEnd);
+            String lastTwo = epc.substring(epc.length() - 5, epc.length() - 3);
+
+
+            System.out.println("Shelf number: " + shelfN);
+
             Typeface customFont = ResourcesCompat.getFont(this, R.font.sans);
 
             int startIndex = tableData.getChildCount() + 1;
@@ -1183,8 +1495,15 @@ public class StockTakingActivity extends AppCompatActivity {
             row.setBackgroundColor(EPCs.size() % 2 == 0 ? 0xFFFFFFFF : 0xFFEFEFEF);
             //row.setGravity(Gravity.CENTER);
 
+            TextView col0 = new TextView(this);
+            col0.setText(String.valueOf(lastTwo));
+            //col1.setGravity(Gravity.CENTER);
+            col0.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            col0.setTypeface(customFont, Typeface.BOLD);
+            col0.setPadding(8, 8, 8, 8);
+
             TextView col1 = new TextView(this);
-            col1.setText(String.valueOf(startIndex));
+            col1.setText(String.valueOf(shelfN));
             //col1.setGravity(Gravity.CENTER);
             col1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             col1.setTypeface(customFont, Typeface.BOLD);
@@ -1197,11 +1516,32 @@ public class StockTakingActivity extends AppCompatActivity {
             col2.setTypeface(customFont, Typeface.BOLD);
             col2.setPadding(8, 8, 8, 8);
 
-            row.addView(col1);
-            row.addView(col2);
 
-            tableData.addView(row);
-            EPCs.add(epc);
+
+            if (shelfN != selfNumber || (!lastTwo.equals(spinnerCabinet.getSelectedItem().toString()) && spinnerCabinet.getSelectedItemPosition() != 0)){
+                row.setBackgroundColor(Color.parseColor("#E57373"));
+                col0.setTextColor(Color.WHITE);
+                col1.setTextColor(Color.WHITE);
+                col2.setTextColor(Color.WHITE);
+                row.addView(col0);
+                row.addView(col1);
+                row.addView(col2);
+
+                tableData.addView(row,0);
+
+                EPCs.add(0,epc);
+            }
+            else{
+                row.addView(col0);
+                row.addView(col1);
+                row.addView(col2);
+
+                tableData.addView(row);
+
+                EPCs.add(epc);
+            }
+
+
 
             new Thread(() -> {
                 runOnUiThread(() -> {
@@ -1415,20 +1755,25 @@ public class StockTakingActivity extends AppCompatActivity {
                     // Tag EPC bilgisini alırsın
                     int rssi = tag.getPeakRSSI(); // <<< Buradan RSSI değerini alıyorsun
                     System.out.println(tag.getTagID() + " / "+ rssi);
+                    System.out.println("rssiFilter "+ rssiFilter);
 
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    // update UI
-                                    addRows(tag.getTagID());
-                                }
-                            });
-                        }
-                    }).start();
+                    if (rssi > rssiFilter) {
+                        System.out.println("OK");
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        // update UI
 
+                                        addRows(tag.getTagID());
+
+                                    }
+                                });
+                            }
+                        }).start();
+                    }
 
                 }
 

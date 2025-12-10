@@ -467,6 +467,45 @@ public class RfidWriteActivity extends AppCompatActivity {
 
                                     System.out.println("Response:" + response);
 
+                                    if (response.equals("OK")){
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        // update UI
+                                                        System.out.println(finalSessionCallResponse.ResponseCode);
+                                                        txtSuccess.setText("RFID başarılı bir şekilde yazıldı.");
+                                                        successOverlay.setVisibility(View.VISIBLE);
+                                                        new Handler().postDelayed(() -> {
+                                                            successOverlay.setVisibility(View.GONE);
+                                                        }, 3000);
+                                                    }
+                                                });
+                                            }
+                                        }).start();
+                                    }
+                                    else{
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        // update UI
+                                                        System.out.println(finalSessionCallResponse.ResponseCode);
+                                                        txtFail.setText("RFID yazılamadı. " + response);
+                                                        failOverlay.setVisibility(View.VISIBLE);
+                                                        new Handler().postDelayed(() -> {
+                                                            failOverlay.setVisibility(View.GONE);
+                                                        }, 3000);
+                                                    }
+                                                });
+                                            }
+                                        }).start();
+                                    }
+
                                     runOnUiThread(() -> loadingDialog.dismiss());
                                 } else if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
                                     new Thread(new Runnable() {

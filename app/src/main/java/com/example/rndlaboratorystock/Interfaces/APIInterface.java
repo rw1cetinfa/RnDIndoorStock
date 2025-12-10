@@ -8,6 +8,7 @@ import com.example.rndlaboratorystock.Models.DatetimeResponseModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
 import com.example.rndlaboratorystock.Models.RndLaboratoryResponseSession;
+import com.example.rndlaboratorystock.Models.RndLaboratoryRssiFilter;
 import com.example.rndlaboratorystock.Models.SessionPostModel;
 import com.example.rndlaboratorystock.Models.UpdateResponse;
 import com.example.rndlaboratorystock.Models.UserResponseModel;
@@ -65,4 +66,9 @@ public interface APIInterface {
 
     @GET
     Call<ResponseBody> DownloadApk(@Url String fileUrl); // Dinamik URL
+
+    @PUT("Laboratory/UpdateRSSI")
+    Call<BlankModel> UpdateRSSI(@Query("rssi") int rssi);
+    @GET("Laboratory/GetRSSI")
+    Call<RndLaboratoryRssiFilter> GetRSSI();
 }

@@ -2,6 +2,8 @@ package com.example.rndlaboratorystock;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import android.animation.Animator;
@@ -10,6 +12,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -81,6 +84,10 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+
+
+
+
         apiInterface = APIClient.getClient().create(APIInterface.class);
 
         btnLogin = findViewById(R.id.btnLogin);
@@ -110,7 +117,7 @@ public class LoginActivity extends AppCompatActivity {
 */
 
         String currentVersion = BuildConfig.VERSION_NAME;
-        txtVersion.setText("v."+currentVersion);
+        txtVersion.setText("v "+currentVersion);
         apiInterface.CheckUpdate().enqueue(new Callback<UpdateResponse>() {
             @Override
             public void onResponse(Call<UpdateResponse> call, Response<UpdateResponse> response) {
@@ -311,7 +318,8 @@ public class LoginActivity extends AppCompatActivity {
     private boolean saveApkToDisk(ResponseBody body) {
         try {
 
-            File apkFile = new File(getExternalFilesDir(null), "LaboratoryStock.apk");
+            File apkFile = new File(getExternalFilesDir(String.valueOf(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS))), "LaboratoryStock.apk");
             InputStream inputStream = body.byteStream();
             OutputStream outputStream = new FileOutputStream(apkFile);
 
@@ -333,7 +341,8 @@ public class LoginActivity extends AppCompatActivity {
     private void installApk() {
         Toasty.success(LoginActivity.this, "started",
                 Toast.LENGTH_LONG, true).show();
-        File apkFile = new File(getExternalFilesDir(null), "LaboratoryStock.apk");
+        File apkFile = new File(getExternalFilesDir(String.valueOf(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS))), "LaboratoryStock.apk");
 
         if (apkFile.exists()) {
             Toasty.success(LoginActivity.this, "exists",

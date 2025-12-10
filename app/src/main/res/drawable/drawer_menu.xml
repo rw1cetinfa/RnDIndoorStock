@@ -1,0 +1,20 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Header -->
+    <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_header"
+            android:title="İŞLEMLER"
+            android:enabled="false"/>
+    </group>
+
+    <!-- Menü elemanları -->
+    <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_rssi"
+            android:title="RSSI"
+            android:icon="@drawable/ic_rssi"/>
+
+    </group>
+
+</menu>
