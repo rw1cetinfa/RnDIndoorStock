@@ -20,8 +20,8 @@
         android:roundIcon="@drawable/chemistry"
         android:supportsRtl="true"
         android:theme="@style/Theme.RnDLaboratoryStock"
-        android:versionCode="1"
-        android:versionName="1.7"
+        android:versionCode="2"
+        android:versionName="2.0"
         tools:targetApi="31">
 
         <provider

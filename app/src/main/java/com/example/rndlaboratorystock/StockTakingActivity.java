@@ -715,207 +715,32 @@ public class StockTakingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                loadingDialog.show();
+                if (EPCs.size() == 0){
+                    AlertDialog.Builder builder = new AlertDialog.Builder(StockTakingActivity.this);
 
-                new Thread(() -> {
+                    builder.setTitle("Stok Sayım Bitirme Onayı");
+                    builder.setMessage("Herhangi bir RFID okutulmadı. Bu rafı hariç tutup sayımı bitirmek istiyor musunuz?");
 
-                    IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, selfNumber, spinnerCabinet.getSelectedItem().toString(), EPCs);
-
-                    new Thread(() -> {
-                        try {
-                            Call<BlankModel> sessionCall = apiInterface.IncreaseSession(session);
-                            ResponseModel<BlankModel> sessionCallResponse = null;
-                            sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
-                            ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
-                            runOnUiThread(() -> {
-                                if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
-
-                                    try {
-                                        Call<BlankModel> sessionCall2 = apiInterface.EndSession(sessionId, true);
-                                        ResponseModel<BlankModel> sessionCallResponse2 = null;
-                                        try {
-                                            sessionCallResponse2 = new APICallAynscTask<BlankModel>().execute(sessionCall2).get();
-
-                                            ResponseModel<BlankModel> finalSessionCallResponse2 = sessionCallResponse2;
-                                            runOnUiThread(() -> {
-                                                if (finalSessionCallResponse2.Error == null &&
-                                                        (finalSessionCallResponse2.Content.ResponseCode == 200 || finalSessionCallResponse2.Content.ResponseCode == 202)) {
-
-                                                    if (finalSessionCallResponse2.Content.ResponseCode == 200) {
-                                                        txtSuccess.setText("Sayım tamamlandı. Rapor gönderildi.");
-                                                    } else if (finalSessionCallResponse2.Content.ResponseCode == 202) {
-                                                        txtSuccess.setText("Sayım tamamlandı. Rapor gönderilemedi. IT'ye bilgi veriniz.");
-                                                    }
-
-                                                    confettiView.setVisibility(View.VISIBLE);
-                                                    confettiView.playAnimation();
-                                                    successOverlay.setVisibility(View.VISIBLE);
-
-                                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                                        successOverlay.setVisibility(View.GONE);
-                                                    }, 3000);
-
-                                                    confettiView.addAnimatorListener(new AnimatorListenerAdapter() {
-                                                        @Override
-                                                        public void onAnimationEnd(Animator animation) {
-                                                            confettiView.setVisibility(View.GONE);
-                                                        }
-                                                    });
-
-                                                    btnStart.setVisibility(View.VISIBLE);
-                                                    spinnerCabinet.setSelection(0);
-                                                    cabinetNumber = null;
-                                                    sessionId = 0;
-                                                    btnNextShelf.setVisibility(View.INVISIBLE);
-                                                    btnEnd.setVisibility(View.INVISIBLE);
-                                                    txtScannerAnimationNumber.setText("0");
-                                                    txtSelfNumber.setText("1");
-                                                    btnReset.setVisibility(View.INVISIBLE);
-                                                    btnCancel.setVisibility(View.INVISIBLE);
-                                                    clearTable();
-                                                    loadingDialog.dismiss();
-                                                } else {
-                                                    loadingDialog.dismiss();
-                                                    txtFail.setText(finalSessionCallResponse2.Error.ErrorDesc);
-                                                    failOverlay.setVisibility(View.VISIBLE);
-
-                                                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                                        failOverlay.setVisibility(View.GONE);
-                                                    }, 3000);
-                                                }
-                                            });
-
-                                        } catch (ExecutionException e) {
-                                            new Thread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            // update UI
-                                                            txtFail.setText(e.getLocalizedMessage());
-                                                            failOverlay.setVisibility(View.VISIBLE);
-                                                            new Handler().postDelayed(() -> {
-                                                                failOverlay.setVisibility(View.GONE);
-                                                            }, 3000);
-                                                        }
-                                                    });
-                                                }
-                                            }).start();
-                                            runOnUiThread(() -> loadingDialog.dismiss());
-                                        } catch (InterruptedException e) {
-                                            new Thread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            // update UI
-                                                            txtFail.setText(e.getLocalizedMessage());
-                                                            failOverlay.setVisibility(View.VISIBLE);
-                                                            new Handler().postDelayed(() -> {
-                                                                failOverlay.setVisibility(View.GONE);
-                                                            }, 3000);
-                                                        }
-                                                    });
-                                                }
-                                            }).start();
-                                            runOnUiThread(() -> loadingDialog.dismiss());
-                                        }
-
-                                    } catch (Exception e) {
-                                        loadingDialog.dismiss();
-                                        System.out.println("HATA:" + e.getLocalizedMessage());
-                                    }
-                                }
-                                else if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 406){
-                                    new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // update UI
-                                                    System.out.println(finalSessionCallResponse.ResponseCode);
-                                                    txtFail.setText("Malzemeler daha önceden kaydedilmiş. Tekrar tarama yapınız.");
-                                                    failOverlay.setVisibility(View.VISIBLE);
-                                                    new Handler().postDelayed(() -> {
-                                                        failOverlay.setVisibility(View.GONE);
-                                                    }, 3000);
-                                                    selfNumber -= 1;
-                                                    txtSelfNumber.setText(""+selfNumber);
-                                                }
-                                            });
-                                        }
-                                    }).start();
-                                    runOnUiThread(() -> loadingDialog.dismiss());
-                                }
-                                else {
-                                    ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
-                                    new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // update UI
-                                                    txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
-                                                    failOverlay.setVisibility(View.VISIBLE);
-                                                    new Handler().postDelayed(() -> {
-                                                        failOverlay.setVisibility(View.GONE);
-                                                    }, 3000);
-                                                }
-                                            });
-                                        }
-                                    }).start();
-                                    runOnUiThread(() -> loadingDialog.dismiss());
-                                    selfNumber -= 1;
-                                    txtSelfNumber.setText(""+selfNumber);
-                                }
-                            });
-                        } catch (ExecutionException e) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            // update UI
-                                            txtFail.setText(e.getLocalizedMessage());
-                                            failOverlay.setVisibility(View.VISIBLE);
-                                            new Handler().postDelayed(() -> {
-                                                failOverlay.setVisibility(View.GONE);
-                                            }, 3000);
-                                        }
-                                    });
-                                }
-                            }).start();
-                            runOnUiThread(() -> loadingDialog.dismiss());
-                        } catch (InterruptedException e) {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            // update UI
-                                            txtFail.setText(e.getLocalizedMessage());
-                                            failOverlay.setVisibility(View.VISIBLE);
-                                            new Handler().postDelayed(() -> {
-                                                failOverlay.setVisibility(View.GONE);
-                                            }, 3000);
-                                        }
-                                    });
-                                }
-                            }).start();
-                            runOnUiThread(() -> loadingDialog.dismiss());
+                    builder.setPositiveButton("Evet", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            StockTakingEnd();
                         }
-                    }).start();
+                    });
 
+                    builder.setNegativeButton("Hayır", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss(); // Pencereyi kapatır
+                        }
+                    });
 
-                }).start();
-
-
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+                else{
+                    StockTakingEnd();
+                }
             }
         });
 
@@ -1448,6 +1273,207 @@ public class StockTakingActivity extends AppCompatActivity {
         // super.onBackPressed(); // Çağırma
     }
 
+    private void StockTakingEnd(){
+        loadingDialog.show();
+
+        new Thread(() -> {
+
+            IncreaseShelfPostModel session = new IncreaseShelfPostModel(sessionId, selfNumber, spinnerCabinet.getSelectedItem().toString(), EPCs);
+
+            new Thread(() -> {
+                try {
+                    Call<BlankModel> sessionCall = apiInterface.IncreaseSession(session);
+                    ResponseModel<BlankModel> sessionCallResponse = null;
+                    sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
+                    ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
+                    runOnUiThread(() -> {
+                        if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
+
+                            try {
+                                Call<BlankModel> sessionCall2 = apiInterface.EndSession(sessionId, true);
+                                ResponseModel<BlankModel> sessionCallResponse2 = null;
+                                try {
+                                    sessionCallResponse2 = new APICallAynscTask<BlankModel>().execute(sessionCall2).get();
+
+                                    ResponseModel<BlankModel> finalSessionCallResponse2 = sessionCallResponse2;
+                                    runOnUiThread(() -> {
+                                        if (finalSessionCallResponse2.Error == null &&
+                                                (finalSessionCallResponse2.Content.ResponseCode == 200 || finalSessionCallResponse2.Content.ResponseCode == 202)) {
+
+                                            if (finalSessionCallResponse2.Content.ResponseCode == 200) {
+                                                txtSuccess.setText("Sayım tamamlandı. Rapor gönderildi.");
+                                            } else if (finalSessionCallResponse2.Content.ResponseCode == 202) {
+                                                txtSuccess.setText("Sayım tamamlandı. Rapor gönderilemedi. IT'ye bilgi veriniz.");
+                                            }
+
+                                            confettiView.setVisibility(View.VISIBLE);
+                                            confettiView.playAnimation();
+                                            successOverlay.setVisibility(View.VISIBLE);
+
+                                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                successOverlay.setVisibility(View.GONE);
+                                            }, 3000);
+
+                                            confettiView.addAnimatorListener(new AnimatorListenerAdapter() {
+                                                @Override
+                                                public void onAnimationEnd(Animator animation) {
+                                                    confettiView.setVisibility(View.GONE);
+                                                }
+                                            });
+
+                                            btnStart.setVisibility(View.VISIBLE);
+                                            spinnerCabinet.setSelection(0);
+                                            cabinetNumber = null;
+                                            sessionId = 0;
+                                            btnNextShelf.setVisibility(View.INVISIBLE);
+                                            btnEnd.setVisibility(View.INVISIBLE);
+                                            txtScannerAnimationNumber.setText("0");
+                                            txtSelfNumber.setText("1");
+                                            btnReset.setVisibility(View.INVISIBLE);
+                                            btnCancel.setVisibility(View.INVISIBLE);
+                                            clearTable();
+                                            loadingDialog.dismiss();
+                                        } else {
+                                            loadingDialog.dismiss();
+                                            txtFail.setText(finalSessionCallResponse2.Error.ErrorDesc);
+                                            failOverlay.setVisibility(View.VISIBLE);
+
+                                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                failOverlay.setVisibility(View.GONE);
+                                            }, 3000);
+                                        }
+                                    });
+
+                                } catch (ExecutionException e) {
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // update UI
+                                                    txtFail.setText(e.getLocalizedMessage());
+                                                    failOverlay.setVisibility(View.VISIBLE);
+                                                    new Handler().postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                }
+                                            });
+                                        }
+                                    }).start();
+                                    runOnUiThread(() -> loadingDialog.dismiss());
+                                } catch (InterruptedException e) {
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // update UI
+                                                    txtFail.setText(e.getLocalizedMessage());
+                                                    failOverlay.setVisibility(View.VISIBLE);
+                                                    new Handler().postDelayed(() -> {
+                                                        failOverlay.setVisibility(View.GONE);
+                                                    }, 3000);
+                                                }
+                                            });
+                                        }
+                                    }).start();
+                                    runOnUiThread(() -> loadingDialog.dismiss());
+                                }
+
+                            } catch (Exception e) {
+                                loadingDialog.dismiss();
+                                System.out.println("HATA:" + e.getLocalizedMessage());
+                            }
+                        }
+                        else if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 406){
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // update UI
+                                            System.out.println(finalSessionCallResponse.ResponseCode);
+                                            txtFail.setText("Malzemeler daha önceden kaydedilmiş. Tekrar tarama yapınız.");
+                                            failOverlay.setVisibility(View.VISIBLE);
+                                            new Handler().postDelayed(() -> {
+                                                failOverlay.setVisibility(View.GONE);
+                                            }, 3000);
+                                            selfNumber -= 1;
+                                            txtSelfNumber.setText(""+selfNumber);
+                                        }
+                                    });
+                                }
+                            }).start();
+                            runOnUiThread(() -> loadingDialog.dismiss());
+                        }
+                        else {
+                            ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // update UI
+                                            txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                            failOverlay.setVisibility(View.VISIBLE);
+                                            new Handler().postDelayed(() -> {
+                                                failOverlay.setVisibility(View.GONE);
+                                            }, 3000);
+                                        }
+                                    });
+                                }
+                            }).start();
+                            runOnUiThread(() -> loadingDialog.dismiss());
+                            selfNumber -= 1;
+                            txtSelfNumber.setText(""+selfNumber);
+                        }
+                    });
+                } catch (ExecutionException e) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // update UI
+                                    txtFail.setText(e.getLocalizedMessage());
+                                    failOverlay.setVisibility(View.VISIBLE);
+                                    new Handler().postDelayed(() -> {
+                                        failOverlay.setVisibility(View.GONE);
+                                    }, 3000);
+                                }
+                            });
+                        }
+                    }).start();
+                    runOnUiThread(() -> loadingDialog.dismiss());
+                } catch (InterruptedException e) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // update UI
+                                    txtFail.setText(e.getLocalizedMessage());
+                                    failOverlay.setVisibility(View.VISIBLE);
+                                    new Handler().postDelayed(() -> {
+                                        failOverlay.setVisibility(View.GONE);
+                                    }, 3000);
+                                }
+                            });
+                        }
+                    }).start();
+                    runOnUiThread(() -> loadingDialog.dismiss());
+                }
+            }).start();
+
+
+        }).start();
+    }
 
     private void showEmptyMessage() {
         // Zaten varsa tekrar ekleme

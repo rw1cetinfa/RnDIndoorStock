@@ -211,7 +211,7 @@ public class RfidWriteActivity extends AppCompatActivity {
 
         List<String> items1 = new ArrayList<>();
         items1.add("Ürün numarası seçiniz"); // ilk eleman sabit
-        for (int i = 1; i <= 150; i++) {
+        for (int i = 1; i <= 999; i++) {
             items1.add(String.valueOf(i));
         }
         ArrayAdapter<String> adapter1 = new ArrayAdapter<>(
