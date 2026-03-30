@@ -40,6 +40,8 @@ import com.example.rndlaboratorystock.Interfaces.APIInterface;
 import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
+import com.example.rndlaboratorystock.Models.RndLaboratoryEpcDetail;
+import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.zebra.rfid.api3.Antennas;
 import com.zebra.rfid.api3.ENUM_TRANSPORT;
@@ -67,6 +69,8 @@ import com.zebra.rfid.api3.TriggerInfo;
 
 import org.w3c.dom.Text;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -457,7 +461,7 @@ public class RfidWriteActivity extends AppCompatActivity {
                             ResponseModel<BlankModel> sessionCallResponse = null;
                             sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
                             ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
-                            runOnUiThread(() -> {
+
                                 if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 404) {
 
                                     //RFID YAZ
@@ -468,23 +472,118 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     System.out.println("Response:" + response);
 
                                     if (response.equals("OK")){
-                                        new Thread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                runOnUiThread(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        // update UI
-                                                        System.out.println(finalSessionCallResponse.ResponseCode);
-                                                        txtSuccess.setText("RFID başarılı bir şekilde yazıldı.");
-                                                        successOverlay.setVisibility(View.VISIBLE);
-                                                        new Handler().postDelayed(() -> {
-                                                            successOverlay.setVisibility(View.GONE);
-                                                        }, 3000);
-                                                    }
+
+                                        // Giriş formatı (dd.MM.yyyy)
+                                        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+                                        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+                                        LocalDate date = LocalDate.parse(txtSelectedDate.getText().toString(), inputFormatter);
+                                        String formattedDate = date.atStartOfDay().format(outputFormatter);
+
+                                        RndLaboratoryEpcDetail epcDetail = new RndLaboratoryEpcDetail();
+                                        epcDetail.Epc = txtRFIDToBeWritten.getText().toString();
+                                        epcDetail.ExpiredDate = formattedDate;
+                                        epcDetail.Shelf = Integer.parseInt(spShelfNumber.getSelectedItem().toString());
+                                        epcDetail.Cabinet = spCupboard.getSelectedItem().toString();
+                                        System.out.println(spMaterialNumber.getSelectedItem().toString());
+                                        System.out.println(spProductNumber.getSelectedItem().toString());
+
+                                        String selectedValue = spMaterialNumber.getSelectedItem().toString();
+                                        epcDetail.Quantity = String.format("%02d", Integer.parseInt(selectedValue));
+                                        String selectedValue2 = spProductNumber.getSelectedItem().toString();
+                                        epcDetail.ProductNumber = String.format("%02d", Integer.parseInt(selectedValue2));
+
+                                        epcDetail.Brand = "-";
+                                        epcDetail.PackageQuantity = "0";
+                                        epcDetail.Code = "-";
+
+                                        try {
+                                            Call<BlankModel> sessionEpcCall = apiInterface.InsertEpcDetails(epcDetail);
+                                            ResponseModel<BlankModel> sessionEpcCallResponse = null;
+                                            sessionEpcCallResponse = new APICallAynscTask<BlankModel>().execute(sessionEpcCall).get();
+                                            ResponseModel<BlankModel> finalSessionEpcCallResponse = sessionEpcCallResponse;
+
+                                            if (finalSessionEpcCallResponse.Error == null && finalSessionEpcCallResponse.Content.ResponseCode == 200)
+                                            {
+                                                runOnUiThread(() -> {
+                                                    new Thread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            runOnUiThread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    // update UI
+                                                                    System.out.println(finalSessionCallResponse.ResponseCode);
+                                                                    txtSuccess.setText("RFID başarılı bir şekilde yazıldı.");
+                                                                    successOverlay.setVisibility(View.VISIBLE);
+                                                                    new Handler().postDelayed(() -> {
+                                                                        successOverlay.setVisibility(View.GONE);
+                                                                    }, 3000);
+                                                                }
+                                                            });
+                                                        }
+                                                    }).start();
                                                 });
                                             }
-                                        }).start();
+                                            else{
+                                                ResponseModel<BlankModel> finalsessionCallResponse = finalSessionEpcCallResponse;
+                                                new Thread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        runOnUiThread(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                // update UI
+                                                                txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                                failOverlay.setVisibility(View.VISIBLE);
+                                                                new Handler().postDelayed(() -> {
+                                                                    failOverlay.setVisibility(View.GONE);
+                                                                }, 3000);
+                                                            }
+                                                        });
+                                                    }
+                                                }).start();
+                                                runOnUiThread(() -> loadingDialog.dismiss());
+                                            }
+
+                                        } catch (ExecutionException e) {
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            // update UI
+                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                            new Handler().postDelayed(() -> {
+                                                                failOverlay.setVisibility(View.GONE);
+                                                            }, 3000);
+                                                        }
+                                                    });
+                                                }
+                                            }).start();
+                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                        } catch (InterruptedException e) {
+                                            new Thread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    runOnUiThread(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            // update UI
+                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            failOverlay.setVisibility(View.VISIBLE);
+                                                            new Handler().postDelayed(() -> {
+                                                                failOverlay.setVisibility(View.GONE);
+                                                            }, 3000);
+                                                        }
+                                                    });
+                                                }
+                                            }).start();
+                                            runOnUiThread(() -> loadingDialog.dismiss());
+                                        }
                                     }
                                     else{
                                         new Thread(new Runnable() {
@@ -546,7 +645,7 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     }).start();
                                     runOnUiThread(() -> loadingDialog.dismiss());
                                 }
-                            });
+
                         } catch (ExecutionException e) {
                             new Thread(new Runnable() {
                                 @Override
@@ -605,7 +704,7 @@ public class RfidWriteActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+                Intent intent = new Intent(getApplicationContext(), MaterialInOutActivity.class);
                 //intent.putExtra("supplier", supplier);
                 intent.putExtra("wmCode", wmCode);
                 intent.putExtra("wmName", wmName);

@@ -6,6 +6,7 @@ import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.DateAndWeekResponseModel;
 import com.example.rndlaboratorystock.Models.DatetimeResponseModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
+import com.example.rndlaboratorystock.Models.RndLaboratoryEpcDetail;
 import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
 import com.example.rndlaboratorystock.Models.RndLaboratoryResponseSession;
 import com.example.rndlaboratorystock.Models.RndLaboratoryRssiFilter;
@@ -13,12 +14,15 @@ import com.example.rndlaboratorystock.Models.SessionPostModel;
 import com.example.rndlaboratorystock.Models.UpdateResponse;
 import com.example.rndlaboratorystock.Models.UserResponseModel;
 
+import java.util.List;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 import retrofit2.http.Url;
 
@@ -71,4 +75,10 @@ public interface APIInterface {
     Call<BlankModel> UpdateRSSI(@Query("rssi") int rssi);
     @GET("Laboratory/GetRSSI")
     Call<RndLaboratoryRssiFilter> GetRSSI();
+
+    @POST("Laboratory/InsertEpcDetails")
+    Call<BlankModel> InsertEpcDetails(@Body RndLaboratoryEpcDetail model);
+
+    @PUT("Laboratory/DeleteByEpcs/{wm_code}")
+    Call<BlankModel> DeleteByEpcs(@Body List<String> epcs,@Path("wm_code") String wmCode);
 }

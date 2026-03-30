@@ -12,67 +12,53 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/txtLabName"
+            android:id="@+id/txtManuName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/bungee"
-            android:text="OPERASYONLAR"
+            android:text="MALZEME GİRİŞ-ÇIKIŞ"
             android:textColor="#20262B"
             android:textSize="26sp"
             android:textStyle="bold"
             android:gravity="center" />
 
         <com.example.rndlaboratorystock.Classes.AnimatedButton
-            android:id="@+id/btnStockTaking"
+            android:id="@+id/btnIn"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginStart="96dp"
             android:layout_marginEnd="96dp"
             android:layout_marginBottom="20dp"
             android:background="@drawable/button_bg"
-            android:text="ENVANTER SAYIM"
+            android:text="MALZEME GİRİŞ"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/sans"
             android:textStyle="bold"
             android:textSize="18sp"/>
 
         <com.example.rndlaboratorystock.Classes.AnimatedButton
-
-            android:id="@+id/btnMaterialDetail"
+            android:id="@+id/btnOut"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginStart="96dp"
             android:layout_marginEnd="96dp"
             android:layout_marginBottom="20dp"
             android:background="@drawable/button_bg"
-            android:text="MALZEME DETAYI"
+            android:text="MALZEME ÇIKIŞ"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/sans"
             android:textStyle="bold"
             android:textSize="18sp"/>
 
         <com.example.rndlaboratorystock.Classes.AnimatedButton
-            android:id="@+id/btnRfidWrite"
+            android:id="@+id/btnMaterialMenuBack"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginStart="96dp"
             android:layout_marginEnd="96dp"
             android:layout_marginBottom="20dp"
             android:background="@drawable/button_bg"
-            android:text="Malzeme GİRİŞ-ÇIKIŞ"
-            android:textColor="#FFFFFF"
-            android:fontFamily="@font/sans"
-            android:textStyle="bold"
-            android:textSize="18sp"/>
-        <com.example.rndlaboratorystock.Classes.AnimatedButton
-            android:id="@+id/btnBack"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginStart="96dp"
-            android:layout_marginEnd="96dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/button_bg"
-            android:text="ÇIKIŞ"
+            android:text="GERI"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/sans"
             android:textStyle="bold"

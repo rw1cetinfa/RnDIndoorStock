@@ -384,7 +384,7 @@
                     android:padding="4dp">
 
                     <TextView
-                        android:text="ADET NO"
+                        android:text="ÜRÜN NO"
                         android:fontFamily="@font/sans"
                         android:textColor="#FFFFFF"
                         android:gravity="center"
@@ -426,7 +426,7 @@
                     android:padding="4dp">
 
                     <TextView
-                        android:text="KALAN"
+                        android:text="ŞİŞE ADET"
                         android:fontFamily="@font/sans"
                         android:textColor="#FFFFFF"
                         android:gravity="center"

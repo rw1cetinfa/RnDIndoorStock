@@ -93,7 +93,7 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void OpenRfidWritePage(){
-        Intent intent = new Intent(getApplicationContext(), RfidWriteActivity.class);
+        Intent intent = new Intent(getApplicationContext(), MaterialInOutActivity.class);
         //intent.putExtra("supplier", supplier);
         intent.putExtra("wmCode", wmCode);
         intent.putExtra("wmName", wmName);
