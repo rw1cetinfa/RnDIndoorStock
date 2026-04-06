@@ -64,7 +64,7 @@ public class APIClient {
         retrofit = new Retrofit.Builder()
 
                 //.baseUrl("https://127.0.0.1:7159/api/")
-                .baseUrl("https://pwwwapptr126-01.ptg.local/TPL/RnDLaboratoryStock/api/")
+                .baseUrl("https://pwwwapptr126-01.ptg.local/TPL/RnDLaboratoryStockAPITest/api/")
                 //.baseUrl("http://dwwwapptr126-01.ptg.local/IndoorDashboardAPI/api/")
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(client)

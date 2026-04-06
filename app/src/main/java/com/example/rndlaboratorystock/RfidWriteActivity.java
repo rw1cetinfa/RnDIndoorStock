@@ -40,8 +40,7 @@ import com.example.rndlaboratorystock.Interfaces.APIInterface;
 import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
-import com.example.rndlaboratorystock.Models.RndLaboratoryEpcDetail;
-import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryMaster;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.zebra.rfid.api3.Antennas;
 import com.zebra.rfid.api3.ENUM_TRANSPORT;
@@ -481,11 +480,11 @@ public class RfidWriteActivity extends AppCompatActivity {
                                         LocalDate date = LocalDate.parse(txtSelectedDate.getText().toString(), inputFormatter);
                                         String formattedDate = date.atStartOfDay().format(outputFormatter);
 
-                                        RndLaboratoryEpcDetail epcDetail = new RndLaboratoryEpcDetail();
+                                        RndIndoorLaboratoryMaster.Data epcDetail = new RndIndoorLaboratoryMaster.Data();
                                         epcDetail.Epc = txtRFIDToBeWritten.getText().toString();
                                         epcDetail.ExpiredDate = formattedDate;
                                         epcDetail.Shelf = Integer.parseInt(spShelfNumber.getSelectedItem().toString());
-                                        epcDetail.Cabinet = spCupboard.getSelectedItem().toString();
+                                        epcDetail.CabinetNumber = spCupboard.getSelectedItem().toString();
                                         System.out.println(spMaterialNumber.getSelectedItem().toString());
                                         System.out.println(spProductNumber.getSelectedItem().toString());
 

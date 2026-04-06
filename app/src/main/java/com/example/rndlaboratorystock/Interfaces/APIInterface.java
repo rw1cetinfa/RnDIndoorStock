@@ -6,10 +6,10 @@ import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.DateAndWeekResponseModel;
 import com.example.rndlaboratorystock.Models.DatetimeResponseModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
-import com.example.rndlaboratorystock.Models.RndLaboratoryEpcDetail;
-import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
-import com.example.rndlaboratorystock.Models.RndLaboratoryResponseSession;
-import com.example.rndlaboratorystock.Models.RndLaboratoryRssiFilter;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryMaster;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryMaterial;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryRssiFilter;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratorySession;
 import com.example.rndlaboratorystock.Models.SessionPostModel;
 import com.example.rndlaboratorystock.Models.UpdateResponse;
 import com.example.rndlaboratorystock.Models.UserResponseModel;
@@ -29,7 +29,7 @@ import retrofit2.http.Url;
 public interface APIInterface {
 
     // Rim Size Endpoint
-    @GET("Laboratory/UserCheck")
+    @GET("IndoorLaboratory/UserCheck")
     Call<UserResponseModel> UserCheck(@Query("workerCode") String workerCode);
 
     @GET("General/GetDateAndWeek")
@@ -39,29 +39,29 @@ public interface APIInterface {
     Call<DatetimeResponseModel> GetDateTime();
 
 
-    @POST("Laboratory/StartSession")
-    Call<RndLaboratoryResponseSession> StartSession(@Body SessionPostModel postModel);
+    @POST("IndoorLaboratory/StartSession")
+    Call<RndIndoorLaboratorySession> StartSession(@Body SessionPostModel postModel);
 
-    @GET("Laboratory/CheckSession")
-    Call<RndLaboratoryResponseSession> CheckSession(@Query("wmCode") String workerCode);
+    @GET("IndoorLaboratory/CheckSession")
+    Call<RndIndoorLaboratorySession> CheckSession(@Query("wmCode") String workerCode);
 
-    @PUT("Laboratory/IncreaseSession")
+    @PUT("IndoorLaboratory/IncreaseSession")
     Call<BlankModel> IncreaseSession(@Body IncreaseShelfPostModel postModel);
 
-    @PUT("Laboratory/UpdateSession")
+    @PUT("IndoorLaboratory/UpdateSession")
     Call<BlankModel> UpdateSession(@Body IncreaseShelfPostModel postModel);
 
-    @GET("Laboratory/EndSession")
+    @GET("IndoorLaboratory/EndSession")
     Call<BlankModel> EndSession(@Query("sessionId") int sessionId, @Query("flag") Boolean flag);
 
-    @GET("Laboratory/CheckRFIDAvailability")
+    @GET("IndoorLaboratory/CheckRFIDAvailability")
     Call<BlankModel> CheckRFIDAvailability(@Query("epc") String epc);
 
-    @POST("Laboratory/AddEvent")
+    @POST("IndoorLaboratory/AddEvent")
     Call<BlankModel> AddEvent(@Body AddEventModel model);
 
-    @GET("Laboratory/GetMaterialDetailsByRFID")
-    Call<RndLaboratoryMaterial> GetMaterialDetailsByRFID(@Query("epc") String epc);
+    @GET("IndoorLaboratory/GetMaterialDetailsByRFID")
+    Call<RndIndoorLaboratoryMaterial> GetMaterialDetailsByRFID(@Query("epc") String epc);
 
 
     //Automatic Update
@@ -71,14 +71,14 @@ public interface APIInterface {
     @GET
     Call<ResponseBody> DownloadApk(@Url String fileUrl); // Dinamik URL
 
-    @PUT("Laboratory/UpdateRSSI")
+    @PUT("IndoorLaboratory/UpdateRSSI")
     Call<BlankModel> UpdateRSSI(@Query("rssi") int rssi);
-    @GET("Laboratory/GetRSSI")
-    Call<RndLaboratoryRssiFilter> GetRSSI();
+    @GET("IndoorLaboratory/GetRSSI")
+    Call<RndIndoorLaboratoryRssiFilter> GetRSSI();
 
-    @POST("Laboratory/InsertEpcDetails")
-    Call<BlankModel> InsertEpcDetails(@Body RndLaboratoryEpcDetail model);
+    @POST("IndoorLaboratory/InsertEpcDetails")
+    Call<BlankModel> InsertEpcDetails(@Body RndIndoorLaboratoryMaster.Data model);
 
-    @PUT("Laboratory/DeleteByEpcs/{wm_code}")
+    @PUT("IndoorLaboratory/DeleteByEpcs/{wm_code}")
     Call<BlankModel> DeleteByEpcs(@Body List<String> epcs,@Path("wm_code") String wmCode);
 }

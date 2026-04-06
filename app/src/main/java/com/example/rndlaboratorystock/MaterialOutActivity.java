@@ -32,7 +32,7 @@ import com.example.rndlaboratorystock.Classes.APIClient;
 import com.example.rndlaboratorystock.Interfaces.APIInterface;
 import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
-import com.example.rndlaboratorystock.Models.RndLaboratoryRssiFilter;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryRssiFilter;
 import com.zebra.rfid.api3.Antennas;
 import com.zebra.rfid.api3.ENUM_TRANSPORT;
 import com.zebra.rfid.api3.ENUM_TRIGGER_MODE;
@@ -163,18 +163,18 @@ public class MaterialOutActivity extends AppCompatActivity {
             }
         }).start();
 
-        Call<RndLaboratoryRssiFilter> rssiFilterCall = apiInterface.GetRSSI();
-        ResponseModel<RndLaboratoryRssiFilter> rssiFilterCallResponse = null;
+        Call<RndIndoorLaboratoryRssiFilter> rssiFilterCall = apiInterface.GetRSSI();
+        ResponseModel<RndIndoorLaboratoryRssiFilter> rssiFilterCallResponse = null;
         try {
-            rssiFilterCallResponse = new APICallAynscTask<RndLaboratoryRssiFilter>().execute(rssiFilterCall).get();
+            rssiFilterCallResponse = new APICallAynscTask<RndIndoorLaboratoryRssiFilter>().execute(rssiFilterCall).get();
             if (rssiFilterCallResponse.Error == null && rssiFilterCallResponse.Content.ResponseCode == 200) {
-                RndLaboratoryRssiFilter.Data response = rssiFilterCallResponse.Content.Data.get(0);
+                RndIndoorLaboratoryRssiFilter.Data response = rssiFilterCallResponse.Content.Data.get(0);
 
                 rssiFilter = response.Rssi;
 
             } else {
 
-                ResponseModel<RndLaboratoryRssiFilter> finalDateAndWeekResponseModel = rssiFilterCallResponse;
+                ResponseModel<RndIndoorLaboratoryRssiFilter> finalDateAndWeekResponseModel = rssiFilterCallResponse;
                 new Thread(new Runnable() {
                     @Override
                     public void run() {

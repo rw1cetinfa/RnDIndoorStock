@@ -2,10 +2,9 @@ package com.example.rndlaboratorystock.Models;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-public class RndLaboratoryResponseSession {
+public class RndIndoorLaboratoryAndroidVersion {
     @SerializedName("responseCode")
     public int ResponseCode;
     @SerializedName("data")
@@ -14,15 +13,11 @@ public class RndLaboratoryResponseSession {
     public class Data {
         @SerializedName("id")
         public int Id;
-        @SerializedName("wmCode")
-        public String WmCode;
-        @SerializedName("latestShelfNumber")
-        public int LatestShelfNumber;
-        @SerializedName("latestCabinetNumber")
-        public String LatestCabinetNumber;
+        @SerializedName("appVersion")
+        public String AppVersion;
         @SerializedName("isActive")
         public boolean IsActive;
         @SerializedName("insertedAt")
-        public LocalDateTime InsertedAt;
+        public String InsertedAt;
     }
 }

@@ -27,7 +27,7 @@ import com.example.rndlaboratorystock.Classes.APIClient;
 import com.example.rndlaboratorystock.Interfaces.APIInterface;
 import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
-import com.example.rndlaboratorystock.Models.RndLaboratoryMaterial;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryMaterial;
 import com.zebra.rfid.api3.Antennas;
 import com.zebra.rfid.api3.ENUM_TRANSPORT;
 import com.zebra.rfid.api3.ENUM_TRIGGER_MODE;
@@ -189,16 +189,16 @@ public class MaterialDetailActivity extends AppCompatActivity {
 
                     new Thread(() -> {
                         try {
-                            Call<RndLaboratoryMaterial> sessionCall = apiInterface.GetMaterialDetailsByRFID(editTextRFID.getText().toString().toUpperCase());
-                            ResponseModel<RndLaboratoryMaterial> sessionCallResponse = null;
-                            sessionCallResponse = new APICallAynscTask<RndLaboratoryMaterial>().execute(sessionCall).get();
-                            ResponseModel<RndLaboratoryMaterial> finalSessionCallResponse = sessionCallResponse;
+                            Call<RndIndoorLaboratoryMaterial> sessionCall = apiInterface.GetMaterialDetailsByRFID(editTextRFID.getText().toString().toUpperCase());
+                            ResponseModel<RndIndoorLaboratoryMaterial> sessionCallResponse = null;
+                            sessionCallResponse = new APICallAynscTask<RndIndoorLaboratoryMaterial>().execute(sessionCall).get();
+                            ResponseModel<RndIndoorLaboratoryMaterial> finalSessionCallResponse = sessionCallResponse;
                             runOnUiThread(() -> {
                                 if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
 
                                     //DETAYLAR
                                     runOnUiThread(() -> loadingDialog.dismiss());
-                                    RndLaboratoryMaterial.Data material = finalSessionCallResponse.Content.Data.get(0);
+                                    RndIndoorLaboratoryMaterial.Data material = finalSessionCallResponse.Content.Data.get(0);
 
                                     txtBrand.setText(material.Brand);
                                     txtBrandCode.setText(material.BrandCode);
@@ -213,7 +213,7 @@ public class MaterialDetailActivity extends AppCompatActivity {
                                     editTextRFID.requestFocus();
                                 }
                                 else {
-                                    ResponseModel<RndLaboratoryMaterial> finalsessionCallResponse = finalSessionCallResponse;
+                                    ResponseModel<RndIndoorLaboratoryMaterial> finalsessionCallResponse = finalSessionCallResponse;
                                     new Thread(new Runnable() {
                                         @Override
                                         public void run() {

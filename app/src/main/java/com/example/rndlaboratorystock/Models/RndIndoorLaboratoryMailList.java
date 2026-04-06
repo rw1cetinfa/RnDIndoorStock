@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class RndLaboratoryRssiFilter {
+public class RndIndoorLaboratoryMailList {
     @SerializedName("responseCode")
     public int ResponseCode;
     @SerializedName("data")
@@ -13,8 +13,9 @@ public class RndLaboratoryRssiFilter {
     public class Data {
         @SerializedName("id")
         public int Id;
-        @SerializedName("rssi")
-        public int Rssi;
-
+        @SerializedName("email")
+        public String Email;
+        @SerializedName("insertedAt")
+        public String InsertedAt;
     }
 }

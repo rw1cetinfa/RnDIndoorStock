@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class RndLaboratoryMaterial {
+public class RndIndoorLaboratoryMaterial {
     @SerializedName("responseCode")
     public int ResponseCode;
     @SerializedName("data")
@@ -29,13 +29,13 @@ public class RndLaboratoryMaterial {
         public String CompanyName;
         @SerializedName("itemNumber")
         public int ItemNumber;
-        @SerializedName("limit")
-        public int Limit;
-        @SerializedName("exp")
-        public int Exp;
         @SerializedName("remain")
         public int Remain;
+        @SerializedName("limit")
+        public int Limit;
         @SerializedName("insertedAt")
         public String InsertedAt;
+        @SerializedName("exp")
+        public String Exp;
     }
 }

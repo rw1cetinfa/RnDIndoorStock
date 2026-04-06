@@ -49,8 +49,8 @@ import com.example.rndlaboratorystock.Models.BlankModel;
 import com.example.rndlaboratorystock.Models.DateAndWeekResponseModel;
 import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
-import com.example.rndlaboratorystock.Models.RndLaboratoryResponseSession;
-import com.example.rndlaboratorystock.Models.RndLaboratoryRssiFilter;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratorySession;
+import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryRssiFilter;
 import com.example.rndlaboratorystock.Models.SessionPostModel;
 import com.example.rndlaboratorystock.Models.UserResponseModel;
 import com.google.android.material.navigation.NavigationView;
@@ -250,18 +250,18 @@ public class StockTakingActivity extends AppCompatActivity {
             }
         });
 
-        Call<RndLaboratoryRssiFilter> rssiFilterCall = apiInterface.GetRSSI();
-        ResponseModel<RndLaboratoryRssiFilter> rssiFilterCallResponse = null;
+        Call<RndIndoorLaboratoryRssiFilter> rssiFilterCall = apiInterface.GetRSSI();
+        ResponseModel<RndIndoorLaboratoryRssiFilter> rssiFilterCallResponse = null;
         try {
-            rssiFilterCallResponse = new APICallAynscTask<RndLaboratoryRssiFilter>().execute(rssiFilterCall).get();
+            rssiFilterCallResponse = new APICallAynscTask<RndIndoorLaboratoryRssiFilter>().execute(rssiFilterCall).get();
             if (rssiFilterCallResponse.Error == null && rssiFilterCallResponse.Content.ResponseCode == 200) {
-                RndLaboratoryRssiFilter.Data response = rssiFilterCallResponse.Content.Data.get(0);
+                RndIndoorLaboratoryRssiFilter.Data response = rssiFilterCallResponse.Content.Data.get(0);
 
                 rssiFilter = response.Rssi;
 
             } else {
 
-                ResponseModel<RndLaboratoryRssiFilter> finalDateAndWeekResponseModel = rssiFilterCallResponse;
+                ResponseModel<RndIndoorLaboratoryRssiFilter> finalDateAndWeekResponseModel = rssiFilterCallResponse;
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -501,12 +501,12 @@ public class StockTakingActivity extends AppCompatActivity {
                     new Thread(() -> {
                         SessionPostModel session = new SessionPostModel(wmCode, spinnerCabinet.getSelectedItem().toString());
 
-                        Call<RndLaboratoryResponseSession> sessionCall = apiInterface.StartSession(session);
-                        ResponseModel<RndLaboratoryResponseSession> sessionCallResponse = null;
+                        Call<RndIndoorLaboratorySession> sessionCall = apiInterface.StartSession(session);
+                        ResponseModel<RndIndoorLaboratorySession> sessionCallResponse = null;
                         try {
-                            sessionCallResponse = new APICallAynscTask<RndLaboratoryResponseSession>().execute(sessionCall).get();
+                            sessionCallResponse = new APICallAynscTask<RndIndoorLaboratorySession>().execute(sessionCall).get();
 
-                            ResponseModel<RndLaboratoryResponseSession> finalSessionCallResponse = sessionCallResponse;
+                            ResponseModel<RndIndoorLaboratorySession> finalSessionCallResponse = sessionCallResponse;
                             runOnUiThread(() -> {
                             if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
                                 txtSuccess.setText("Stok sayımı başlatıldı. Tarama yapabilirsiniz.");
@@ -526,7 +526,7 @@ public class StockTakingActivity extends AppCompatActivity {
                                 btnReset.setVisibility(View.VISIBLE);
                                 btnCancel.setVisibility(View.VISIBLE);
                             } else {
-                                ResponseModel<RndLaboratoryResponseSession> finalsessionCallResponse = finalSessionCallResponse;
+                                ResponseModel<RndIndoorLaboratorySession> finalsessionCallResponse = finalSessionCallResponse;
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -1093,10 +1093,10 @@ public class StockTakingActivity extends AppCompatActivity {
 
         //------ Session Control --------
 
-        Call<RndLaboratoryResponseSession> sessionCheckCall = apiInterface.CheckSession(wmCode);
-        ResponseModel<RndLaboratoryResponseSession> sessionCheckCallResponse = null;
+        Call<RndIndoorLaboratorySession> sessionCheckCall = apiInterface.CheckSession(wmCode);
+        ResponseModel<RndIndoorLaboratorySession> sessionCheckCallResponse = null;
         try {
-            sessionCheckCallResponse = new APICallAynscTask<RndLaboratoryResponseSession>().execute(sessionCheckCall).get();
+            sessionCheckCallResponse = new APICallAynscTask<RndIndoorLaboratorySession>().execute(sessionCheckCall).get();
 
 
             if (sessionCheckCallResponse.Error == null && sessionCheckCallResponse.Content.ResponseCode == 200) {
