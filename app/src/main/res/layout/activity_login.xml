@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/bungee"
-            android:text="KIMYA LABORATUVARI ENVANTER SAYIM"
+            android:text="INDOOR LABORATUVARI ENVANTER SAYIM"
             android:textColor="#20262B"
             android:textSize="26sp"
             android:textStyle="bold"

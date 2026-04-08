@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,34 +13,24 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.NumberPicker;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.rndlaboratorystock.Classes.APICallAynscTask;
 import com.example.rndlaboratorystock.Classes.APIClient;
-import com.example.rndlaboratorystock.Helpers.LocaleHelper;
 import com.example.rndlaboratorystock.Helpers.StringHelper;
 import com.example.rndlaboratorystock.Interfaces.APIInterface;
 import com.example.rndlaboratorystock.Models.BlankModel;
-import com.example.rndlaboratorystock.Models.IncreaseShelfPostModel;
 import com.example.rndlaboratorystock.Models.ResponseModel;
 import com.example.rndlaboratorystock.Models.RndIndoorLaboratoryMaster;
-import com.google.android.material.datepicker.MaterialDatePicker;
 import com.zebra.rfid.api3.Antennas;
 import com.zebra.rfid.api3.ENUM_TRANSPORT;
 import com.zebra.rfid.api3.ENUM_TRIGGER_MODE;
@@ -66,17 +55,10 @@ import com.zebra.rfid.api3.TagAccess;
 import com.zebra.rfid.api3.TagData;
 import com.zebra.rfid.api3.TriggerInfo;
 
-import org.w3c.dom.Text;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-import kotlin.Suppress;
 import retrofit2.Call;
 
 public class RfidWriteActivity extends AppCompatActivity {
@@ -90,7 +72,6 @@ public class RfidWriteActivity extends AppCompatActivity {
     private EventHandler eventHandler;
     private Boolean isRFIDPerforming = false;
 
-    Button btnBack;
     Button btnSave;
 
     Dialog scannerDialog;
@@ -100,7 +81,7 @@ public class RfidWriteActivity extends AppCompatActivity {
     TextView txtFail;
     TextView txtSuccess;
 
-    EditText editTextRFID;
+    EditText editTextProductSerial;
 
     FrameLayout failOverlay;
     FrameLayout successOverlay;
@@ -129,7 +110,6 @@ public class RfidWriteActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_rfid_write);
 
-        btnBack = findViewById(R.id.btnBack);
         btnSave = findViewById(R.id.btnSave);
 
         txtRFIDRead = findViewById(R.id.txtRFIDRead);
@@ -137,7 +117,7 @@ public class RfidWriteActivity extends AppCompatActivity {
         txtFail = findViewById(R.id.txtFail);
         txtSuccess = findViewById(R.id.txtSuccess);
 
-        editTextRFID = findViewById(R.id.editTextRFID);
+        editTextProductSerial = findViewById(R.id.editTextProductSerial);
 
         failOverlay = findViewById(R.id.failOverlay);
         successOverlay = findViewById(R.id.successOverlay);
@@ -145,308 +125,64 @@ public class RfidWriteActivity extends AppCompatActivity {
         confettiView = findViewById(R.id.confettiView);
 
         loadingDialog = new Dialog(RfidWriteActivity.this);
-        loadingDialog.setContentView(R.layout.loading_popup_layout);  // Popup layout'unu belirtiyoruz
-        loadingDialog.setCancelable(false);  // Kullanıcının popup'ı kapatmasını engelliyoruz
+        loadingDialog.setContentView(R.layout.loading_popup_layout);
+        loadingDialog.setCancelable(false);
         loadingDialog.getWindow().setBackgroundDrawableResource(R.drawable.loading_popup_background);
 
-
-        // Classic loading dialog
         scannerDialog = new Dialog(RfidWriteActivity.this);
         scannerDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         scannerDialog.setContentView(R.layout.popup_lottie);
 
-        // Animasyon
         LottieAnimationView lottieAnimation = scannerDialog.findViewById(R.id.lottieAnimation);
         lottieAnimation.playAnimation();
 
         txtScannerAnimationNumber = scannerDialog.findViewById(R.id.txtScannerAnimationNumber);
-        // Dialog ayarları
         if (scannerDialog.getWindow() != null) {
             scannerDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             scannerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
-
-        // RFID conf. loading dialog
         loadingDialogRFID = new Dialog(RfidWriteActivity.this);
-        loadingDialogRFID.setContentView(R.layout.rfid_loading_popup_layout);  // Popup layout'unu belirtiyoruz
-        loadingDialogRFID.setCancelable(false);  // Kullanıcının popup'ı kapatmasını engelliyoruz
+        loadingDialogRFID.setContentView(R.layout.rfid_loading_popup_layout);
+        loadingDialogRFID.setCancelable(false);
         loadingDialogRFID.getWindow().setBackgroundDrawableResource(R.drawable.loading_popup_background);
 
-        // Lottie animasyonunu popup'ta başlatıyoruz
         LottieAnimationView popupAnimation = loadingDialogRFID.findViewById(R.id.loadingAnimation);
-        popupAnimation.playAnimation();  // Animasyonu başlat
+        popupAnimation.playAnimation();
 
-        // Popup'ı gösteriyoruz
         new Thread(new Runnable() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        // update UI
                         loadingDialogRFID.show();
                     }
                 });
             }
         }).start();
 
-
-        editTextRFID.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Metin değişmeden hemen önce tetiklenir
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Metin değiştiği anda tetiklenir
-                txtRFIDRead.setText(s.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                // Metin değiştikten sonra tetiklenir
-            }
-        });
-
-        Spinner spProductNumber = findViewById(R.id.productNumber);
-
-        List<String> items1 = new ArrayList<>();
-        items1.add("Ürün numarası seçiniz"); // ilk eleman sabit
-        for (int i = 1; i <= 999; i++) {
-            items1.add(String.valueOf(i));
-        }
-        ArrayAdapter<String> adapter1 = new ArrayAdapter<>(
-                this,
-                R.layout.spinner_item,
-                items1
-        );
-        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spProductNumber.setAdapter(adapter1);
-
-
-        Button btnSelectDate = findViewById(R.id.btnSelectDate);
-        TextView txtSelectedDate = findViewById(R.id.txtSelectedDate);
-
-        btnSelectDate.setOnClickListener(v -> {
-            final Calendar calendar = Calendar.getInstance();
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-            Context context = LocaleHelper.setLocale(RfidWriteActivity.this, "tr"); // helper sınıf kullanabilirsin
-            DatePickerDialog datePickerDialog = new DatePickerDialog(
-                    this,
-                    android.R.style.Theme_Holo_Dialog, // koyu tema
-                    (view, selectedYear, selectedMonth, selectedDay) -> {
-                        // Gün ve ayı 2 haneli yap
-                        String date = String.format("%02d.%02d.%04d", selectedDay, selectedMonth + 1, selectedYear);
-                        String formatteddate = String.format("%02d%02d%02d", selectedDay, selectedMonth + 1, selectedYear % 100);
-
-                        txtSelectedDate.setText(date);
-                        txtRFIDToBeWritten.setText(
-                                StringHelper.replaceSubstring(
-                                        txtRFIDToBeWritten.getText().toString(),
-                                        13,
-                                        6,
-                                        formatteddate
-                                )
-                        );
-                    },
-                    year, month, day
-            );
-
-            datePickerDialog.show();
-        });
-
-        Spinner spCupboard = findViewById(R.id.cupboardIdentifier);
-        ArrayAdapter<String> adapter2 = new ArrayAdapter<>(
-                this,
-                R.layout.spinner_item,
-                new String[]{"Dolap numarası seçiniz", "AA", "AB", "AC", "AD", "AE", "AF",
-                        "BA", "BB", "BC", "BD", "BE", "BF"
-                });
-        adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spCupboard.setAdapter(adapter2);
-
-        Spinner spShelfNumber = findViewById(R.id.shelfNumber);
-        ArrayAdapter<String> adapter3 = new ArrayAdapter<>(
-                this,
-                R.layout.spinner_item,
-                new String[]{"Raf numarası seçiniz", "1", "2", "3", "4", "5", "6",
-                        "7", "8", "9"
-                });
-        adapter3.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spShelfNumber.setAdapter(adapter3);
-
-
-
-
-        Spinner spMaterialNumber = findViewById(R.id.materialNumber);
-        /*ArrayAdapter<String> adapter4 = new ArrayAdapter<>(
-                this,
-                R.layout.spinner_item,
-                new String[]{"Adet seçiniz", "1", "2", "3", "4", "5", "6",
-                        "7", "8", "9"
-                });*/
-        List<String> items2 = new ArrayList<>();
-        items2.add("Adet seçiniz"); // ilk eleman sabit
-        for (int i = 1; i <= 99; i++) {
-            items2.add(String.valueOf(i));
-        }
-        ArrayAdapter<String> adapter4 = new ArrayAdapter<>(
-                this,
-                R.layout.spinner_item,
-                items2
-        );
-        adapter4.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spMaterialNumber.setAdapter(adapter4);
-
-        spProductNumber.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Seçilen elemanı al
-                if (position != 0) {
-                    String selectedProductNumber = parent.getItemAtPosition(position).toString();
-
-                    int number = Integer.parseInt(selectedProductNumber);
-                    String formatted = String.format("%03d", number);
-
-                    txtRFIDToBeWritten.setText(
-                            StringHelper.replaceSubstring(
-                                    txtRFIDToBeWritten.getText().toString(),
-                                    0,
-                                    3,
-                                    formatted
-                            )
-                    );
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Hiçbir şey seçilmediğinde çalışır (opsiyonel)
-            }
-        });
-
-        spCupboard.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Seçilen elemanı al
-                if (position != 0) {
-                    String selectedCupboard = parent.getItemAtPosition(position).toString();
-
-                    txtRFIDToBeWritten.setText(
-                            StringHelper.replaceSubstring(
-                                    txtRFIDToBeWritten.getText().toString(),
-                                    19,
-                                    2,
-                                    selectedCupboard
-                            )
-                    );
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Hiçbir şey seçilmediğinde çalışır (opsiyonel)
-            }
-        });
-
-        spShelfNumber.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Seçilen elemanı al
-                if (position != 0) {
-                    String selectedShelfNumber = parent.getItemAtPosition(position).toString();
-
-                    txtRFIDToBeWritten.setText(
-                            StringHelper.replaceSubstring(
-                                    txtRFIDToBeWritten.getText().toString(),
-                                    21,
-                                    1,
-                                    selectedShelfNumber
-                            )
-                    );
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Hiçbir şey seçilmediğinde çalışır (opsiyonel)
-            }
-        });
-
-        spMaterialNumber.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Seçilen elemanı al
-                if (position != 0) {
-                    String selectedMaterialNumber = parent.getItemAtPosition(position).toString();
-
-                    int number = Integer.parseInt(selectedMaterialNumber);
-                    String formatted = String.format("%02d", number);
-
-                    txtRFIDToBeWritten.setText(
-                            StringHelper.replaceSubstring(
-                                    txtRFIDToBeWritten.getText().toString(),
-                                    22,
-                                    2,
-                                    formatted
-                            )
-                    );
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Hiçbir şey seçilmediğinde çalışır (opsiyonel)
-            }
-        });
-
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String productSerial = editTextProductSerial.getText().toString().trim();
+                String rfidRead = txtRFIDRead.getText().toString().trim();
+                String rfidToWrite = txtRFIDToBeWritten.getText().toString().trim();
 
-                if (txtRFIDToBeWritten.getText().toString().equals("000000000000000000000000")) {
-                    txtFail.setText("Lütfen tüm alanları doldurunuz.");
+                if (productSerial.isEmpty()) {
+                    txtFail.setText("Lütfen ürün sıra numarası giriniz.");
                     failOverlay.setVisibility(View.VISIBLE);
                     new Handler().postDelayed(() -> {
                         failOverlay.setVisibility(View.GONE);
                     }, 2000);
-                } else if (editTextRFID.getText().toString().equals("")) {
+                } else if (rfidRead.equals("-") || rfidRead.isEmpty()) {
                     txtFail.setText("Lütfen RFID okutunuz.");
                     failOverlay.setVisibility(View.VISIBLE);
                     new Handler().postDelayed(() -> {
                         failOverlay.setVisibility(View.GONE);
                     }, 2000);
-                } else if (spProductNumber.getSelectedItemPosition() == 0) {
-                    txtFail.setText("Lütfen ürün numarası seçiniz.");
-                    failOverlay.setVisibility(View.VISIBLE);
-                    new Handler().postDelayed(() -> {
-                        failOverlay.setVisibility(View.GONE);
-                    }, 2000);
-                } else if (txtSelectedDate.equals("Seçilen Tarih")) {
-                    txtFail.setText("Lütfen SKT seçiniz.");
-                    failOverlay.setVisibility(View.VISIBLE);
-                    new Handler().postDelayed(() -> {
-                        failOverlay.setVisibility(View.GONE);
-                    }, 2000);
-                } else if (spCupboard.getSelectedItemPosition() == 0) {
-                    txtFail.setText("Lütfen dolap seçiniz.");
-                    failOverlay.setVisibility(View.VISIBLE);
-                    new Handler().postDelayed(() -> {
-                        failOverlay.setVisibility(View.GONE);
-                    }, 2000);
-                } else if (spShelfNumber.getSelectedItemPosition() == 0) {
-                    txtFail.setText("Lütfen raf numarası seçiniz.");
-                    failOverlay.setVisibility(View.VISIBLE);
-                    new Handler().postDelayed(() -> {
-                        failOverlay.setVisibility(View.GONE);
-                    }, 2000);
-                } else if (spMaterialNumber.getSelectedItemPosition() == 0) {
-                    txtFail.setText("Lütfen adet seçiniz.");
+                } else if (rfidToWrite.equals("000000000000000000000000")) {
+                    txtFail.setText("Yazılacak RFID oluşturulamadı.");
                     failOverlay.setVisibility(View.VISIBLE);
                     new Handler().postDelayed(() -> {
                         failOverlay.setVisibility(View.GONE);
@@ -456,123 +192,66 @@ public class RfidWriteActivity extends AppCompatActivity {
 
                     new Thread(() -> {
                         try {
-                            Call<BlankModel> sessionCall = apiInterface.CheckRFIDAvailability(txtRFIDToBeWritten.getText().toString());
+                            Call<BlankModel> sessionCall = apiInterface.CheckRFIDAvailability(rfidToWrite);
                             ResponseModel<BlankModel> sessionCallResponse = null;
                             sessionCallResponse = new APICallAynscTask<BlankModel>().execute(sessionCall).get();
                             ResponseModel<BlankModel> finalSessionCallResponse = sessionCallResponse;
 
-                                if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 404) {
+                            if (finalSessionCallResponse.Error != null && finalSessionCallResponse.Error.ErrorCode == 404) {
+                                int password = 0;
+                                String response = writeTag(rfidRead, password, MEMORY_BANK.MEMORY_BANK_EPC, rfidToWrite, 2);
 
-                                    //RFID YAZ
-                                    int password = 0;
-                                    // perform write, offset is two for EPC ID
-                                    String response = writeTag(editTextRFID.getText().toString(), password, MEMORY_BANK.MEMORY_BANK_EPC, txtRFIDToBeWritten.getText().toString(), 2);
+                                System.out.println("Response:" + response);
 
-                                    System.out.println("Response:" + response);
+                                if (response.equals("OK")) {
+                                    RndIndoorLaboratoryMaster.Data epcDetail = new RndIndoorLaboratoryMaster.Data();
+                                    epcDetail.Epc = rfidToWrite;
+                                    epcDetail.ExpiredDate = null;
+                                    epcDetail.Shelf = 0;
+                                    epcDetail.CabinetNumber = "";
+                                    epcDetail.Quantity = "";
+                                    epcDetail.ProductNumber = productSerial;
+                                    epcDetail.Brand = "-";
+                                    epcDetail.PackageQuantity = "0";
+                                    epcDetail.Code = "-";
 
-                                    if (response.equals("OK")){
+                                    try {
+                                        Call<BlankModel> sessionEpcCall = apiInterface.InsertEpcDetails(epcDetail);
+                                        ResponseModel<BlankModel> sessionEpcCallResponse = null;
+                                        sessionEpcCallResponse = new APICallAynscTask<BlankModel>().execute(sessionEpcCall).get();
+                                        ResponseModel<BlankModel> finalSessionEpcCallResponse = sessionEpcCallResponse;
 
-                                        // Giriş formatı (dd.MM.yyyy)
-                                        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-                                        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-
-                                        LocalDate date = LocalDate.parse(txtSelectedDate.getText().toString(), inputFormatter);
-                                        String formattedDate = date.atStartOfDay().format(outputFormatter);
-
-                                        RndIndoorLaboratoryMaster.Data epcDetail = new RndIndoorLaboratoryMaster.Data();
-                                        epcDetail.Epc = txtRFIDToBeWritten.getText().toString();
-                                        epcDetail.ExpiredDate = formattedDate;
-                                        epcDetail.Shelf = Integer.parseInt(spShelfNumber.getSelectedItem().toString());
-                                        epcDetail.CabinetNumber = spCupboard.getSelectedItem().toString();
-                                        System.out.println(spMaterialNumber.getSelectedItem().toString());
-                                        System.out.println(spProductNumber.getSelectedItem().toString());
-
-                                        String selectedValue = spMaterialNumber.getSelectedItem().toString();
-                                        epcDetail.Quantity = String.format("%02d", Integer.parseInt(selectedValue));
-                                        String selectedValue2 = spProductNumber.getSelectedItem().toString();
-                                        epcDetail.ProductNumber = String.format("%02d", Integer.parseInt(selectedValue2));
-
-                                        epcDetail.Brand = "-";
-                                        epcDetail.PackageQuantity = "0";
-                                        epcDetail.Code = "-";
-
-                                        try {
-                                            Call<BlankModel> sessionEpcCall = apiInterface.InsertEpcDetails(epcDetail);
-                                            ResponseModel<BlankModel> sessionEpcCallResponse = null;
-                                            sessionEpcCallResponse = new APICallAynscTask<BlankModel>().execute(sessionEpcCall).get();
-                                            ResponseModel<BlankModel> finalSessionEpcCallResponse = sessionEpcCallResponse;
-
-                                            if (finalSessionEpcCallResponse.Error == null && finalSessionEpcCallResponse.Content.ResponseCode == 200)
-                                            {
-                                                runOnUiThread(() -> {
-                                                    new Thread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            runOnUiThread(new Runnable() {
-                                                                @Override
-                                                                public void run() {
-                                                                    // update UI
-                                                                    System.out.println(finalSessionCallResponse.ResponseCode);
-                                                                    txtSuccess.setText("RFID başarılı bir şekilde yazıldı.");
-                                                                    successOverlay.setVisibility(View.VISIBLE);
-                                                                    new Handler().postDelayed(() -> {
-                                                                        successOverlay.setVisibility(View.GONE);
-                                                                    }, 3000);
-                                                                }
-                                                            });
-                                                        }
-                                                    }).start();
-                                                });
-                                            }
-                                            else{
-                                                ResponseModel<BlankModel> finalsessionCallResponse = finalSessionEpcCallResponse;
+                                        if (finalSessionEpcCallResponse.Error == null && finalSessionEpcCallResponse.Content.ResponseCode == 200) {
+                                            runOnUiThread(() -> {
                                                 new Thread(new Runnable() {
                                                     @Override
                                                     public void run() {
                                                         runOnUiThread(new Runnable() {
                                                             @Override
                                                             public void run() {
-                                                                // update UI
-                                                                txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
-                                                                failOverlay.setVisibility(View.VISIBLE);
+                                                                System.out.println(finalSessionCallResponse.ResponseCode);
+                                                                txtSuccess.setText("RFID başarılı bir şekilde yazıldı.");
+                                                                successOverlay.setVisibility(View.VISIBLE);
                                                                 new Handler().postDelayed(() -> {
-                                                                    failOverlay.setVisibility(View.GONE);
+                                                                    successOverlay.setVisibility(View.GONE);
+                                                                    editTextProductSerial.setText("");
+                                                                    txtRFIDRead.setText("-");
+                                                                    txtRFIDToBeWritten.setText("000000000000000000000000");
                                                                 }, 3000);
                                                             }
                                                         });
                                                     }
                                                 }).start();
-                                                runOnUiThread(() -> loadingDialog.dismiss());
-                                            }
-
-                                        } catch (ExecutionException e) {
+                                            });
+                                        } else {
+                                            ResponseModel<BlankModel> finalsessionCallResponse = finalSessionEpcCallResponse;
                                             new Thread(new Runnable() {
                                                 @Override
                                                 public void run() {
                                                     runOnUiThread(new Runnable() {
                                                         @Override
                                                         public void run() {
-                                                            // update UI
-                                                            txtFail.setText(e.getLocalizedMessage());
-                                                            failOverlay.setVisibility(View.VISIBLE);
-                                                            new Handler().postDelayed(() -> {
-                                                                failOverlay.setVisibility(View.GONE);
-                                                            }, 3000);
-                                                        }
-                                                    });
-                                                }
-                                            }).start();
-                                            runOnUiThread(() -> loadingDialog.dismiss());
-                                        } catch (InterruptedException e) {
-                                            new Thread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    runOnUiThread(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            // update UI
-                                                            txtFail.setText(e.getLocalizedMessage());
+                                                            txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
                                                             failOverlay.setVisibility(View.VISIBLE);
                                                             new Handler().postDelayed(() -> {
                                                                 failOverlay.setVisibility(View.GONE);
@@ -583,17 +262,15 @@ public class RfidWriteActivity extends AppCompatActivity {
                                             }).start();
                                             runOnUiThread(() -> loadingDialog.dismiss());
                                         }
-                                    }
-                                    else{
+
+                                    } catch (ExecutionException e) {
                                         new Thread(new Runnable() {
                                             @Override
                                             public void run() {
                                                 runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        // update UI
-                                                        System.out.println(finalSessionCallResponse.ResponseCode);
-                                                        txtFail.setText("RFID yazılamadı. " + response);
+                                                        txtFail.setText(e.getLocalizedMessage());
                                                         failOverlay.setVisibility(View.VISIBLE);
                                                         new Handler().postDelayed(() -> {
                                                             failOverlay.setVisibility(View.GONE);
@@ -602,38 +279,34 @@ public class RfidWriteActivity extends AppCompatActivity {
                                                 });
                                             }
                                         }).start();
+                                        runOnUiThread(() -> loadingDialog.dismiss());
+                                    } catch (InterruptedException e) {
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        txtFail.setText(e.getLocalizedMessage());
+                                                        failOverlay.setVisibility(View.VISIBLE);
+                                                        new Handler().postDelayed(() -> {
+                                                            failOverlay.setVisibility(View.GONE);
+                                                        }, 3000);
+                                                    }
+                                                });
+                                            }
+                                        }).start();
+                                        runOnUiThread(() -> loadingDialog.dismiss());
                                     }
-
-                                    runOnUiThread(() -> loadingDialog.dismiss());
-                                } else if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
-                                    new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // update UI
-                                                    System.out.println(finalSessionCallResponse.ResponseCode);
-                                                    txtFail.setText("RFID kod farklı bir malzeme için kullanılmakta.");
-                                                    failOverlay.setVisibility(View.VISIBLE);
-                                                    new Handler().postDelayed(() -> {
-                                                        failOverlay.setVisibility(View.GONE);
-                                                    }, 3000);
-                                                }
-                                            });
-                                        }
-                                    }).start();
-                                    runOnUiThread(() -> loadingDialog.dismiss());
                                 } else {
-                                    ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
                                     new Thread(new Runnable() {
                                         @Override
                                         public void run() {
                                             runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    // update UI
-                                                    txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                    System.out.println(finalSessionCallResponse.ResponseCode);
+                                                    txtFail.setText("RFID yazılamadı. " + response);
                                                     failOverlay.setVisibility(View.VISIBLE);
                                                     new Handler().postDelayed(() -> {
                                                         failOverlay.setVisibility(View.GONE);
@@ -642,8 +315,46 @@ public class RfidWriteActivity extends AppCompatActivity {
                                             });
                                         }
                                     }).start();
-                                    runOnUiThread(() -> loadingDialog.dismiss());
                                 }
+
+                                runOnUiThread(() -> loadingDialog.dismiss());
+                            } else if (finalSessionCallResponse.Error == null && finalSessionCallResponse.Content.ResponseCode == 200) {
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                System.out.println(finalSessionCallResponse.ResponseCode);
+                                                txtFail.setText("RFID kod farklı bir malzeme için kullanılmakta.");
+                                                failOverlay.setVisibility(View.VISIBLE);
+                                                new Handler().postDelayed(() -> {
+                                                    failOverlay.setVisibility(View.GONE);
+                                                }, 3000);
+                                            }
+                                        });
+                                    }
+                                }).start();
+                                runOnUiThread(() -> loadingDialog.dismiss());
+                            } else {
+                                ResponseModel<BlankModel> finalsessionCallResponse = finalSessionCallResponse;
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                txtFail.setText(finalsessionCallResponse.Error.ErrorDesc);
+                                                failOverlay.setVisibility(View.VISIBLE);
+                                                new Handler().postDelayed(() -> {
+                                                    failOverlay.setVisibility(View.GONE);
+                                                }, 3000);
+                                            }
+                                        });
+                                    }
+                                }).start();
+                                runOnUiThread(() -> loadingDialog.dismiss());
+                            }
 
                         } catch (ExecutionException e) {
                             new Thread(new Runnable() {
@@ -652,7 +363,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            // update UI
                                             txtFail.setText(e.getLocalizedMessage());
                                             failOverlay.setVisibility(View.VISIBLE);
                                             new Handler().postDelayed(() -> {
@@ -670,7 +380,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            // update UI
                                             txtFail.setText(e.getLocalizedMessage());
                                             failOverlay.setVisibility(View.VISIBLE);
                                             new Handler().postDelayed(() -> {
@@ -684,32 +393,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                         }
                     }).start();
                 }
-
-            }
-        });
-
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (reader != null && reader.isConnected()){
-                    try {
-                        reader.Actions.Inventory.stop();
-                        reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, false);
-                        reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.BARCODE_MODE, true);
-                        reader.disconnect();
-                    } catch (InvalidUsageException e) {
-                        throw new RuntimeException(e);
-                    } catch (OperationFailureException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                Intent intent = new Intent(getApplicationContext(), MaterialInOutActivity.class);
-                //intent.putExtra("supplier", supplier);
-                intent.putExtra("wmCode", wmCode);
-                intent.putExtra("wmName", wmName);
-                intent.putExtra("wmSurname", wmSurname);
-
-                startActivity(intent);
             }
         });
 
@@ -717,23 +400,29 @@ public class RfidWriteActivity extends AppCompatActivity {
             readers = new Readers(this, ENUM_TRANSPORT.SERVICE_SERIAL);
             ConnectRFIDReader();
         } else {
-
-            //reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
             ConnectRFIDReader();
-
         }
-
-
     }
 
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
-        Toast.makeText(this, "Lütfen ekrandaki geri butonunu kullanınız...", Toast.LENGTH_SHORT).show();
-        // super.onBackPressed(); // Çağırma
+        if (reader != null && reader.isConnected()) {
+            try {
+                reader.Actions.Inventory.stop();
+                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, false);
+                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.BARCODE_MODE, true);
+                reader.disconnect();
+            } catch (InvalidUsageException e) {
+                throw new RuntimeException(e);
+            } catch (OperationFailureException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        super.onBackPressed();
     }
 
-    public void ConnectRFIDReader(){
+    public void ConnectRFIDReader() {
         new AsyncTask() {
             @Override
             protected Boolean doInBackground(Object[] objects) {
@@ -741,29 +430,25 @@ public class RfidWriteActivity extends AppCompatActivity {
                     if (readers != null) {
                         if (readers.GetAvailableRFIDReaderList() != null) {
                             availableRFIDReaderList = readers.GetAvailableRFIDReaderList();
-                            System.out.println("Available readers:"+availableRFIDReaderList.size());
+                            System.out.println("Available readers:" + availableRFIDReaderList.size());
                             if (availableRFIDReaderList.size() != 0) {
-                                // get first reader from list
-                                for(int i = 0; i< availableRFIDReaderList.size(); i++){
-                                    System.out.println("Reader "+ i + ": "+ availableRFIDReaderList.get(0).getName());
+                                for (int i = 0; i < availableRFIDReaderList.size(); i++) {
+                                    System.out.println("Reader " + i + ": " + availableRFIDReaderList.get(0).getName());
                                 }
                                 readerDevice = availableRFIDReaderList.get(0);
                                 reader = readerDevice.getRFIDReader();
 
-                                System.out.println("Reader is connected:"+reader.isConnected());
+                                System.out.println("Reader is connected:" + reader.isConnected());
                                 if (!reader.isConnected()) {
-                                    // Establish connection to the RFID Reader
                                     System.out.println("Reader connecting");
                                     reader.connect();
                                     reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     System.out.println("Reader connected");
                                     ConfigureReader();
-                                    // tag event with tag data
                                     System.out.println("Reader configured");
                                     runOnUiThread(() -> loadingDialogRFID.dismiss());
                                     return true;
-                                }
-                                else{
+                                } else {
                                     reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
                                     ConfigureReader();
                                     runOnUiThread(() -> loadingDialogRFID.dismiss());
@@ -782,52 +467,39 @@ public class RfidWriteActivity extends AppCompatActivity {
                 }
                 return false;
             }
-
-
         }.execute();
     }
+
     private void ConfigureReader() {
         if (reader.isConnected()) {
-
             TriggerInfo triggerInfo = new TriggerInfo();
             triggerInfo.StartTrigger.setTriggerType(START_TRIGGER_TYPE.START_TRIGGER_TYPE_IMMEDIATE);
             triggerInfo.StopTrigger.setTriggerType(STOP_TRIGGER_TYPE.STOP_TRIGGER_TYPE_IMMEDIATE);
 
             try {
-                // receive events from reader
                 if (eventHandler == null)
                     eventHandler = new EventHandler();
                 reader.Events.addEventsListener(eventHandler);
-                // HH event
                 reader.Events.setHandheldEvent(true);
-                // tag event with tag data
                 reader.Events.setTagReadEvent(true);
-                // application will collect tag using getReadTags API
                 reader.Events.setAttachTagDataWithReadEvent(false);
-                // set trigger mode as rfid so scanner beam will not come
                 reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, true);
-                // set start and stop triggers
                 reader.Config.setStartTrigger(triggerInfo.StartTrigger);
                 reader.Config.setStopTrigger(triggerInfo.StopTrigger);
 
                 POWER_EVENT power = new POWER_EVENT();
                 power.setPower(500);
 
-
-                float pwr= power.getPower();
-                System.out.println("Power:"+ pwr);
+                float pwr = power.getPower();
+                System.out.println("Power:" + pwr);
 
                 Antennas.AntennaRfConfig antennaRfConfig = reader.Config.Antennas.getAntennaRfConfig(1);
                 antennaRfConfig.setrfModeTableIndex(0);
                 antennaRfConfig.setTari(0);
-                //antennaRfConfig.setTransmitPowerIndex(500);
-                // reader.Config.setAccessOperationWaitTimeout(2000);
-
                 reader.Config.Antennas.setAntennaRfConfig(1, antennaRfConfig);
 
                 Antennas.SingulationControl s1_singulationControl = reader.Config.Antennas.getSingulationControl(1);
                 s1_singulationControl.setSession(SESSION.SESSION_S1);
-                //s1_singulationControl.setTagPopulation((short)1);
                 s1_singulationControl.Action.setInventoryState(INVENTORY_STATE.INVENTORY_STATE_AB_FLIP);
                 s1_singulationControl.Action.setSLFlag(SL_FLAG.SL_ALL);
                 reader.Config.Antennas.setSingulationControl(1, s1_singulationControl);
@@ -841,22 +513,19 @@ public class RfidWriteActivity extends AppCompatActivity {
     }
 
     private String writeTag(String sourceEPC, int Password, MEMORY_BANK memory_bank, String targetData, int offset) {
-
         TagData tagData = null;
         final OperationFailureException[] operationFailureExceptions = new OperationFailureException[1];
         final InvalidUsageException[] invalidUsageExceptions = new InvalidUsageException[1];
         String tagId = sourceEPC;
         TagAccess tagAccess = new TagAccess();
         TagAccess.WriteAccessParams writeAccessParams = tagAccess.new WriteAccessParams();
-        String writeData = targetData; //write data in string
+        String writeData = targetData;
         writeAccessParams.setAccessPassword(Password);
         writeAccessParams.setMemoryBank(memory_bank);
-        writeAccessParams.setOffset(offset); // start writing from word offset 0
+        writeAccessParams.setOffset(offset);
         writeAccessParams.setWriteData(writeData);
-// data length in words
         writeAccessParams.setWriteDataLength(writeData.length() / 4);
-// antenna Info is null – performs on all antenna
-        /*try {*/
+
         CountDownLatch latch = new CountDownLatch(1);
         new Thread(() -> {
             try {
@@ -866,14 +535,12 @@ public class RfidWriteActivity extends AppCompatActivity {
             } catch (InvalidUsageException e) {
                 invalidUsageExceptions[0] = e;
             } finally {
-                latch.countDown();  // yazma işlemi bitince latch serbest kalır
+                latch.countDown();
             }
         }).start();
 
-
         try {
-            latch.await();  // burada bekler, işlem bitince devam eder
-            // Yazma işlemi bitti, buraya gelir
+            latch.await();
             System.out.println("ISLEM YAPILDI");
             String message = null;
             if (operationFailureExceptions[0] != null) {
@@ -890,31 +557,17 @@ public class RfidWriteActivity extends AppCompatActivity {
             e.printStackTrace();
             return e.getLocalizedMessage();
         }
-
-      /*  } catch (InvalidUsageException e) {
-            System.out.println(e.getVendorMessage());
-
-            SetTextView(txtStatus,"YAZILAMADI");
-
-        } catch (OperationFailureException e) {
-            System.out.println(e.getVendorMessage());
-            SetTextView(txtStatus,"YAZILAMADI");
-            return e.getVendorMessage();
-        }*/
-
     }
 
     int i = 1;
 
     public class EventHandler implements RfidEventsListener {
-        // Read Event Notification
         public void eventReadNotify(RfidReadEvents e) {
             TagData[] myTags = reader.Actions.getReadTags(100);
             if (myTags != null) {
                 for (TagData tag : myTags) {
                     String epc = tag.getTagID();
-                    // Tag EPC bilgisini alırsın
-                    int rssi = tag.getPeakRSSI(); // <<< Buradan RSSI değerini alıyorsun
+                    int rssi = tag.getPeakRSSI();
                     System.out.println(tag.getTagID() + " / " + rssi);
 
                     System.out.println("i:" + i);
@@ -922,8 +575,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                         i++;
 
                         try {
-
-
                             if (isRFIDPerforming) {
                                 i = 1;
                                 reader.Actions.Inventory.stop();
@@ -934,8 +585,23 @@ public class RfidWriteActivity extends AppCompatActivity {
                                         runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                // update UI
-                                                editTextRFID.setText(epc);
+                                                String productSerial = editTextProductSerial.getText().toString().trim();
+                                                txtRFIDRead.setText(epc);
+                                                
+                                                // Create RFID to be written: 3 digit product serial + remaining EPC
+                                                if (!productSerial.isEmpty()) {
+                                                    try {
+                                                        int serialNumber = Integer.parseInt(productSerial);
+                                                        String formattedSerial = String.format("%03d", serialNumber);
+                                                        String rfidToWrite = formattedSerial + epc.substring(3);
+                                                        txtRFIDToBeWritten.setText(rfidToWrite);
+                                                    } catch (NumberFormatException ex) {
+                                                        txtRFIDToBeWritten.setText("000" + epc.substring(3));
+                                                    }
+                                                } else {
+                                                    txtRFIDToBeWritten.setText("000" + epc.substring(3));
+                                                }
+                                                
                                                 if (scannerDialog.isShowing()) {
                                                     scannerDialog.dismiss();
                                                 }
@@ -944,7 +610,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     }
                                 }).start();
                             }
-
                         } catch (InvalidUsageException ex) {
                             ex.printStackTrace();
                         } catch (OperationFailureException ex) {
@@ -955,26 +620,17 @@ public class RfidWriteActivity extends AppCompatActivity {
                         i++;
                     } else {
                         i = 1;
-                        //SetTextView(txtStatus,"OKUNAMADI");
                     }
-
-
                 }
-
             }
-
         }
 
-        // Status Event Notification
         public void eventStatusNotify(RfidStatusEvents rfidStatusEvents) {
-
             if (rfidStatusEvents.StatusEventData.getStatusEventType() == STATUS_EVENT_TYPE.HANDHELD_TRIGGER_EVENT) {
                 if (rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent() == HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_PRESSED) {
-                    //SetTextView("Butona basıldı");
                     System.out.println("BUTONA BASILDI!!!");
 
                     try {
-
                         if (!isRFIDPerforming) {
                             reader.Actions.Inventory.perform();
                             isRFIDPerforming = true;
@@ -984,7 +640,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            // update UI
                                             if (!scannerDialog.isShowing()) {
                                                 scannerDialog.show();
                                             }
@@ -998,15 +653,11 @@ public class RfidWriteActivity extends AppCompatActivity {
                     } catch (OperationFailureException e) {
                         e.printStackTrace();
                     }
-
                 }
                 if (rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent() == HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_RELEASED) {
-
                     System.out.println("BUTON BIRAKILDI!!!");
 
                     try {
-
-
                         if (isRFIDPerforming) {
                             reader.Actions.Inventory.stop();
                             isRFIDPerforming = false;
@@ -1016,7 +667,6 @@ public class RfidWriteActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            // update UI
                                             if (scannerDialog.isShowing()) {
                                                 scannerDialog.dismiss();
                                             }
@@ -1025,15 +675,12 @@ public class RfidWriteActivity extends AppCompatActivity {
                                 }
                             }).start();
                         }
-
                     } catch (InvalidUsageException e) {
                         e.printStackTrace();
                     } catch (OperationFailureException e) {
                         e.printStackTrace();
                     }
-
                 }
-
             }
         }
     }

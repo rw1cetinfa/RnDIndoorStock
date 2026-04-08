@@ -23,14 +23,14 @@
             android:gravity="center" />
 
         <com.example.rndlaboratorystock.Classes.AnimatedButton
-            android:id="@+id/btnStockTaking"
+            android:id="@+id/btnRfidWrite"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginStart="96dp"
             android:layout_marginEnd="96dp"
             android:layout_marginBottom="20dp"
             android:background="@drawable/button_bg"
-            android:text="ENVANTER SAYIM"
+            android:text="Malzeme GİRİŞ-ÇIKIŞ"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/sans"
             android:textStyle="bold"
@@ -59,11 +59,26 @@
             android:layout_marginEnd="96dp"
             android:layout_marginBottom="20dp"
             android:background="@drawable/button_bg"
-            android:text="Malzeme GİRİŞ-ÇIKIŞ"
+            android:text="Malzeme Bul"
             android:textColor="#FFFFFF"
             android:fontFamily="@font/sans"
             android:textStyle="bold"
             android:textSize="18sp"/>
+
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+            android:id="@+id/btnStockTaking"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="96dp"
+            android:layout_marginEnd="96dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_bg"
+            android:text="ENVANTER SAYIM"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+
         <com.example.rndlaboratorystock.Classes.AnimatedButton
             android:id="@+id/btnBack"
             android:layout_width="match_parent"
