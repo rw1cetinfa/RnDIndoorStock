@@ -64,7 +64,19 @@
             android:fontFamily="@font/sans"
             android:textStyle="bold"
             android:textSize="18sp"/>
-
+        <com.example.rndlaboratorystock.Classes.AnimatedButton
+            android:id="@+id/btnStockUpdate"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginStart="96dp"
+            android:layout_marginEnd="96dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/button_bg"
+            android:text="Miktar Güncelle"
+            android:textColor="#FFFFFF"
+            android:fontFamily="@font/sans"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
         <com.example.rndlaboratorystock.Classes.AnimatedButton
             android:id="@+id/btnStockTaking"
             android:layout_width="match_parent"

@@ -81,4 +81,7 @@ public interface APIInterface {
 
     @PUT("IndoorLaboratory/DeleteByEpcs/{wm_code}")
     Call<BlankModel> DeleteByEpcs(@Body List<String> epcs,@Path("wm_code") String wmCode);
+
+    @PUT("IndoorLaboratory/UpdateStockByEPC")
+    Call<BlankModel> UpdateStockByEPC(@Query("epc") String epc, @Query("quantity") String quantity);
 }
