@@ -72,14 +72,10 @@ public class MaterialDetailActivity extends AppCompatActivity {
 
     EditText editTextRFID;
 
-    TextView txtBrand;
-    TextView txtBrandCode;
-    TextView txtAmount;
-    TextView txtUnit;
-    TextView txtChemicalName;
-    TextView txtCompanyName;
-    TextView txtItemNumber;
-    TextView txtRemain;
+    TextView txtMaterialName;
+    TextView txtWarehouseCode;
+    TextView txtStock;
+    TextView txtCriticalStock;
     TextView txtFail;
     TextView txtSuccess;
 
@@ -112,14 +108,10 @@ public class MaterialDetailActivity extends AppCompatActivity {
 
         btnBack = findViewById(R.id.btnBack);
 
-        txtBrand = findViewById(R.id.txtBrand);
-        txtBrandCode = findViewById(R.id.txtBrandCode);
-        txtAmount = findViewById(R.id.txtAmount);
-        txtUnit = findViewById(R.id.txtUnit);
-        txtChemicalName = findViewById(R.id.txtChemicalName);
-        txtCompanyName = findViewById(R.id.txtCompanyName);
-        txtItemNumber = findViewById(R.id.txtItemNumber);
-        txtRemain = findViewById(R.id.txtRemain);
+        txtMaterialName = findViewById(R.id.txtMaterialName);
+        txtWarehouseCode = findViewById(R.id.txtWarehouseCode);
+        txtStock = findViewById(R.id.txtStock);
+        txtCriticalStock = findViewById(R.id.txtCriticalStock);
         txtFail = findViewById(R.id.txtFail);
         txtSuccess = findViewById(R.id.txtSuccess);
 
@@ -200,14 +192,10 @@ public class MaterialDetailActivity extends AppCompatActivity {
                                     runOnUiThread(() -> loadingDialog.dismiss());
                                     RndIndoorLaboratoryMaterial.Data material = finalSessionCallResponse.Content.Data.get(0);
 
-                                    txtBrand.setText(material.Brand);
-                                    txtBrandCode.setText(material.BrandCode);
-                                    txtAmount.setText(String.valueOf(material.Amount));
-                                    txtUnit.setText(material.Unit);
-                                    txtChemicalName.setText(material.ChemicalName);
-                                    txtCompanyName.setText(material.CompanyName);
-                                    txtItemNumber.setText(String.valueOf(material.ItemNumber));
-                                    txtRemain.setText(String.valueOf(material.Remain));
+                                    txtMaterialName.setText(material.ChemicalName != null ? material.ChemicalName : "-");
+                                    txtWarehouseCode.setText(material.BrandCode != null ? material.BrandCode : "-");
+                                    txtStock.setText("" + material.Amount);
+                                    txtCriticalStock.setText("" + material.Limit);
 
                                     editTextRFID.setText("");
                                     editTextRFID.requestFocus();
@@ -231,14 +219,10 @@ public class MaterialDetailActivity extends AppCompatActivity {
                                         }
                                     }).start();
                                     runOnUiThread(() -> loadingDialog.dismiss());
-                                    txtBrand.setText("");
-                                    txtBrandCode.setText("");
-                                    txtAmount.setText("");
-                                    txtUnit.setText("");
-                                    txtChemicalName.setText("");
-                                    txtCompanyName.setText("");
-                                    txtItemNumber.setText(String.valueOf(""));
-                                    txtRemain.setText(String.valueOf(""));
+                                    txtMaterialName.setText("-");
+                                    txtWarehouseCode.setText("-");
+                                    txtStock.setText("-");
+                                    txtCriticalStock.setText("-");
 
                                     editTextRFID.setText("");
                                     editTextRFID.requestFocus();
