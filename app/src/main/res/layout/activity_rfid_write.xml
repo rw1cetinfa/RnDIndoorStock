@@ -23,7 +23,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/bungee"
                 android:gravity="center"
-                android:text="RFID YAZ"
+                android:text="MALZEME GİRİŞ"
                 android:textColor="#20262B"
                 android:textSize="26sp"
                 android:textStyle="bold" />

@@ -63,6 +63,9 @@ public interface APIInterface {
     @GET("IndoorLaboratory/GetMaterialDetailsByRFID")
     Call<RndIndoorLaboratoryMaterial> GetMaterialDetailsByRFID(@Query("epc") String epc);
 
+    @GET("IndoorLaboratory/GetMaterialByProductNumber")
+    Call<RndIndoorLaboratoryMaterial> GetMaterialByProductNumber(@Query("productNumber") String productNumber);
+
 
     //Automatic Update
     @GET("AndroidApk/CheckUpdate")

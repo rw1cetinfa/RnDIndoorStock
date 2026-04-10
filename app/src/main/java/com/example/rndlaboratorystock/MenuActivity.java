@@ -17,6 +17,7 @@ public class MenuActivity extends AppCompatActivity {
     private Button btnStockTaking;
     private Button btnMaterialDetail;
     private Button btnRfidWrite;
+    private Button btnMaterialSearch;
     private Button btnStockUpdate;
     private Button btnBack;
 
@@ -37,6 +38,7 @@ public class MenuActivity extends AppCompatActivity {
         btnStockTaking = findViewById(R.id.btnStockTaking);
         btnMaterialDetail = findViewById(R.id.btnMaterialDetail);
         btnRfidWrite = findViewById(R.id.btnRfidWrite);
+        btnMaterialSearch = findViewById(R.id.btnMaterialSearch);
         btnStockUpdate = findViewById(R.id.btnStockUpdate);
         btnBack = findViewById(R.id.btnBack);
 
@@ -58,6 +60,13 @@ public class MenuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 OpenRfidWritePage();
+            }
+        });
+
+        btnMaterialSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OpenMaterialSearchPage();
             }
         });
 
@@ -112,6 +121,14 @@ public class MenuActivity extends AppCompatActivity {
 
     private void OpenStockUpdatePage(){
         Intent intent = new Intent(getApplicationContext(), StockUpdateActivity.class);
+        intent.putExtra("wmCode", wmCode);
+        intent.putExtra("wmName", wmName);
+        intent.putExtra("wmSurname", wmSurname);
+        startActivity(intent);
+    }
+
+    private void OpenMaterialSearchPage(){
+        Intent intent = new Intent(getApplicationContext(), MaterialSearchActivity.class);
         intent.putExtra("wmCode", wmCode);
         intent.putExtra("wmName", wmName);
         intent.putExtra("wmSurname", wmSurname);

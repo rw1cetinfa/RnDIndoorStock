@@ -52,7 +52,7 @@
             android:textSize="18sp"/>
 
         <com.example.rndlaboratorystock.Classes.AnimatedButton
-            android:id="@+id/btnRfidWrite"
+            android:id="@+id/btnMaterialSearch"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginStart="96dp"
