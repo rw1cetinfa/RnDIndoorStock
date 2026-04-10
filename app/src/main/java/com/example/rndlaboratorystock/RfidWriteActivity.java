@@ -56,6 +56,7 @@ import com.zebra.rfid.api3.TagData;
 import com.zebra.rfid.api3.TriggerInfo;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
@@ -73,6 +74,7 @@ public class RfidWriteActivity extends AppCompatActivity {
     private Boolean isRFIDPerforming = false;
 
     Button btnSave;
+    Button btnBack;
 
     Dialog scannerDialog;
 
@@ -111,6 +113,7 @@ public class RfidWriteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_rfid_write);
 
         btnSave = findViewById(R.id.btnSave);
+        btnBack = findViewById(R.id.btnBack);
 
         txtRFIDRead = findViewById(R.id.txtRFIDRead);
         txtRFIDToBeWritten = findViewById(R.id.txtRFIDToBeWritten);
@@ -175,6 +178,12 @@ public class RfidWriteActivity extends AppCompatActivity {
                     new Handler().postDelayed(() -> {
                         failOverlay.setVisibility(View.GONE);
                     }, 2000);
+                } else if (!productSerial.matches("\\d{1,3}") || Integer.parseInt(productSerial) > 999) {
+                    txtFail.setText("Sıra numarası 0-999 arasında olmalıdır.");
+                    failOverlay.setVisibility(View.VISIBLE);
+                    new Handler().postDelayed(() -> {
+                        failOverlay.setVisibility(View.GONE);
+                    }, 2000);
                 } else if (rfidRead.equals("-") || rfidRead.isEmpty()) {
                     txtFail.setText("Lütfen RFID okutunuz.");
                     failOverlay.setVisibility(View.VISIBLE);
@@ -204,21 +213,28 @@ public class RfidWriteActivity extends AppCompatActivity {
                                 System.out.println("Response:" + response);
 
                                 if (response.equals("OK")) {
-                                    RndIndoorLaboratoryMaster.Data epcDetail = new RndIndoorLaboratoryMaster.Data();
-                                    epcDetail.Epc = rfidToWrite;
-                                    epcDetail.ExpiredDate = null;
-                                    epcDetail.Shelf = 0;
-                                    epcDetail.CabinetNumber = "";
-                                    epcDetail.Quantity = "";
-                                    epcDetail.ProductNumber = productSerial;
-                                    epcDetail.Brand = "-";
-                                    epcDetail.PackageQuantity = "0";
-                                    epcDetail.Code = "-";
-
+                                    // Önce eski kaydı sil
+                                    List<String> epcsToDelete = new ArrayList<>();
+                                    epcsToDelete.add(rfidRead);
+                                    
                                     try {
+                                        Call<BlankModel> deleteCall = apiInterface.DeleteByEpcs(epcsToDelete, wmCode);
+                                        ResponseModel<BlankModel> deleteResponse = new APICallAynscTask<BlankModel>().execute(deleteCall).get();
+                                        
+                                        // Silme işlemi başarılı olsun veya olmasın (kayıt olmayabilir), yeni kayıt ekle
+                                        RndIndoorLaboratoryMaster.Data epcDetail = new RndIndoorLaboratoryMaster.Data();
+                                        epcDetail.Epc = rfidToWrite;
+                                        epcDetail.ExpiredDate = null;
+                                        epcDetail.Shelf = 0;
+                                        epcDetail.CabinetNumber = "";
+                                        epcDetail.Quantity = "";
+                                        epcDetail.ProductNumber = productSerial;
+                                        epcDetail.Brand = "-";
+                                        epcDetail.PackageQuantity = "0";
+                                        epcDetail.Code = "-";
+
                                         Call<BlankModel> sessionEpcCall = apiInterface.InsertEpcDetails(epcDetail);
-                                        ResponseModel<BlankModel> sessionEpcCallResponse = null;
-                                        sessionEpcCallResponse = new APICallAynscTask<BlankModel>().execute(sessionEpcCall).get();
+                                        ResponseModel<BlankModel> sessionEpcCallResponse = new APICallAynscTask<BlankModel>().execute(sessionEpcCall).get();
                                         ResponseModel<BlankModel> finalSessionEpcCallResponse = sessionEpcCallResponse;
 
                                         if (finalSessionEpcCallResponse.Error == null && finalSessionEpcCallResponse.Content.ResponseCode == 200) {
@@ -396,6 +412,25 @@ public class RfidWriteActivity extends AppCompatActivity {
             }
         });
 
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (reader != null && reader.isConnected()) {
+                    try {
+                        reader.Actions.Inventory.stop();
+                        reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, false);
+                        reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.BARCODE_MODE, true);
+                        reader.disconnect();
+                    } catch (InvalidUsageException e) {
+                        throw new RuntimeException(e);
+                    } catch (OperationFailureException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                finish();
+            }
+        });
+
         if (readers == null) {
             readers = new Readers(this, ENUM_TRANSPORT.SERVICE_SERIAL);
             ConnectRFIDReader();
@@ -407,19 +442,8 @@ public class RfidWriteActivity extends AppCompatActivity {
     @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
-        if (reader != null && reader.isConnected()) {
-            try {
-                reader.Actions.Inventory.stop();
-                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.RFID_MODE, false);
-                reader.Config.setTriggerMode(ENUM_TRIGGER_MODE.BARCODE_MODE, true);
-                reader.disconnect();
-            } catch (InvalidUsageException e) {
-                throw new RuntimeException(e);
-            } catch (OperationFailureException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        super.onBackPressed();
+        Toast.makeText(this, "Lütfen ekrandaki geri butonunu kullanınız...", Toast.LENGTH_SHORT).show();
+        // super.onBackPressed(); // Çağırma - Hardware back button disabled
     }
 
     public void ConnectRFIDReader() {
@@ -588,18 +612,22 @@ public class RfidWriteActivity extends AppCompatActivity {
                                                 String productSerial = editTextProductSerial.getText().toString().trim();
                                                 txtRFIDRead.setText(epc);
                                                 
-                                                // Create RFID to be written: 3 digit product serial + remaining EPC
-                                                if (!productSerial.isEmpty()) {
+                                                // Create RFID to be written: first 21 chars of EPC + 3 digit serial number at the end
+                                                if (!productSerial.isEmpty() && productSerial.matches("\\d{1,3}")) {
                                                     try {
                                                         int serialNumber = Integer.parseInt(productSerial);
-                                                        String formattedSerial = String.format("%03d", serialNumber);
-                                                        String rfidToWrite = formattedSerial + epc.substring(3);
-                                                        txtRFIDToBeWritten.setText(rfidToWrite);
+                                                        if (serialNumber >= 0 && serialNumber <= 999) {
+                                                            String formattedSerial = String.format("%03d", serialNumber);
+                                                            String rfidToWrite = epc.substring(0, 21) + formattedSerial;
+                                                            txtRFIDToBeWritten.setText(rfidToWrite);
+                                                        } else {
+                                                            txtRFIDToBeWritten.setText(epc.substring(0, 21) + "000");
+                                                        }
                                                     } catch (NumberFormatException ex) {
-                                                        txtRFIDToBeWritten.setText("000" + epc.substring(3));
+                                                        txtRFIDToBeWritten.setText(epc.substring(0, 21) + "000");
                                                     }
                                                 } else {
-                                                    txtRFIDToBeWritten.setText("000" + epc.substring(3));
+                                                    txtRFIDToBeWritten.setText(epc.substring(0, 21) + "000");
                                                 }
                                                 
                                                 if (scannerDialog.isShowing()) {
